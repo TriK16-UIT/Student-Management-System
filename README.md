@@ -33,7 +33,7 @@
 | ------ |:-------------:| ----------------------:|-----------------------------------------------------:|-------------------------:
 | 1      | 21522708      | Phạm Phương Minh Trí   | https://github.com/TriK16-UIT                        |21522708@gm.uit.edu.vn  |
 | 2      | 21521559      | Trương Hữu Trường Sơn  | https://github.com/SonK16-UIT                        |21521559@gm.uit.edu.vn  |
-| 3      | 22520021      | Nguyễn Hoàng Gia An    | https://github.com/NguyenHoangGiaAn                  |22520021@gm.uit.edu.vn  |
+| 3      | 22520021      | Nguyễn Hoàng Gia An    | https://github.com/AnK17-UIT                 |22520021@gm.uit.edu.vn  |
 
 ## ĐỒ ÁN MÔN HỌC
 <a name="doan"></a>
