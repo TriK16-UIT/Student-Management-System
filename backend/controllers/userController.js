@@ -1,5 +1,6 @@
 const User = require('../models/userModel')
 const jwt = require('jsonwebtoken')
+const mongoose = require('mongoose')
 
 const createToken = (_id) => {
     return jwt.sign({_id}, process.env.SECRET_KEY, {expiresIn: '3d'})
@@ -93,6 +94,10 @@ const getUsers = async (req, res) => {
 const getUser = async (req, res) => {
     const {id} = req.params
 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(404).json({error: 'No such user'})
+    }
+
     const user = await User.findOne({ _id: id }, '-password')
 
     if (!user) {
@@ -103,6 +108,10 @@ const getUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
     const {id} = req.params
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(404).json({error: 'No such user'})
+    }
 
     // Check if the 'role' property is in the request body
     if ('role' in req.body || 'username' in req.body || 'email' in req.body || 'UserID' in req.body) {
@@ -121,6 +130,10 @@ const updateUser = async (req, res) => {
 
 const deleteUser = async (req, res) => {
     const {id} = req.params
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(404).json({error: 'No such user'})
+    }
 
     const user = await User.findOneAndDelete({ _id:id })
 

@@ -5,7 +5,6 @@ const Schema = mongoose.Schema
 const classSchema = new Schema({
     numofStudents: { 
         type: Number, 
-        max: 40,
         default: 0 
     },
     name: { 

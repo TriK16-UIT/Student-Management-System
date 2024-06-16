@@ -4,12 +4,12 @@ const Schema = mongoose.Schema
 
 const gradesSchema = new Schema({
     StudentID: { 
-        type: Number, 
+        type: Schema.Types.ObjectId, 
         ref: 'Student', 
         required: true 
     },
     SubjectID: { 
-        type: Number, 
+        type: Schema.Types.ObjectId, 
         ref: 'Subject', 
         required: true 
     },
@@ -20,15 +20,18 @@ const gradesSchema = new Schema({
     },
     score15Min: { 
         type: Number, 
-        required: false
+        required: false,
+        default: 0
     },
     score45Min: { 
         type: Number, 
-        required: false 
+        required: false,
+        default: 0 
     },
     scoreAverage: { 
         type: Number, 
-        required: false 
+        required: false,
+        default: 0
     },
 });
 

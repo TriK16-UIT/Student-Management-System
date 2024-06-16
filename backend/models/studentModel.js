@@ -3,12 +3,8 @@ const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 
 const studentSchema = new Schema({
-    StudentID: {
-        type: Number,
-        required: true
-    },
     ClassID: { 
-        type: Number, 
+        type: Schema.Types.ObjectId, 
         ref: 'Class', 
         required: false 
     },
@@ -30,7 +26,8 @@ const studentSchema = new Schema({
     },
     email: { 
         type: String, 
-        required: true 
+        required: true,
+        unique: true
     },
     gender: { 
         type: String,
@@ -38,7 +35,4 @@ const studentSchema = new Schema({
         required: true 
     },
 })
-
-studentSchema.index({ StudentID: 1 }, { unique: true })
-
 module.exports = mongoose.model('Student', studentSchema)
