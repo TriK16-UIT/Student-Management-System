@@ -4,19 +4,18 @@ const Schema = mongoose.Schema
 
 const classSubjectSchema = new Schema({
     ClassID: { 
-        type: Number, 
+        type: Schema.Types.ObjectId, 
         ref: 'Class', 
         required: true 
     },
     SubjectID: { 
-        type: Number, 
+        type: Schema.Types.ObjectId, 
         ref: 'Subject', 
         required: true 
     },
-    UserID: { 
-        type: Number, 
-        ref: 'User', 
-        required: true 
+    TeacherID: { 
+        type: Schema.Types.ObjectId, 
+        ref: 'Teacher'
     },
 })
 
