@@ -74,7 +74,7 @@ const updateClassSubject = async (req, res) => {
         return res.status(400).json({ error: 'Changing this is not allowed' })
     }
 
-    if (TeacherID) {
+    if ('TeacherID' in req.body) {
         if (TeacherID === "") {
             const classsubject = await ClassSubject.findOneAndUpdate(
                 { _id: id },
@@ -91,6 +91,10 @@ const updateClassSubject = async (req, res) => {
             }
             
             const classSubjectID = await ClassSubject.findById(id).select('SubjectID -_id')
+
+            if (!classSubjectID) {
+                return res.status(400).json({ error: 'ClassSubject not found' })
+            }
 
             if (teacherExists.toString() !== classSubjectID.toString()) {
                 return res.status(400).json({ error: 'This teacher is not allowed to teach this subject!' })
