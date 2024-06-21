@@ -174,12 +174,24 @@ const getGradebyClassIDSubjectIDTerm = async (req, res) => {
     }
 }
 
+const getGrade = async (req, res) => {
+    const {id} = req.params
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(404).json({error: 'No such grade'})
+    }
+
+    const grade = await Grades.findById(id)
+    return res.status(200).json(grade)
+}
+
 module.exports = {
     createGrades,
     createGradesForNewSubject,
     deleteGradesByStudentID,
     deleteGradesBySubjectID,
     updateGrade,
+    getGrade,
     getGradebyStudentID,
     getGradebyStudentIDSubjectID,
     getGradebyStudentIDSubjectIDTerm,

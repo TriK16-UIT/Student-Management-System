@@ -2,6 +2,7 @@ const express = require('express')
 
 const {
     updateGrade,
+    getGrade,
     getGradebyStudentID,
     getGradebyStudentIDSubjectID,
     getGradebyStudentIDSubjectIDTerm,
@@ -15,6 +16,7 @@ const isAdmin = require('../middleware/isAdmin')
 const router = express.Router()
 
 router.patch('/:id', requireAuth, isAdmin, updateGrade)
+router.get('/:id', requireAuth, getGrade)
 router.get('/student/:StudentID', requireAuth, getGradebyStudentID)
 router.get('/student/:StudentID/term/:term', requireAuth, getGradebyStudentIDTerm)
 router.get('/student/:StudentID/subject/:SubjectID', requireAuth, getGradebyStudentIDSubjectID)

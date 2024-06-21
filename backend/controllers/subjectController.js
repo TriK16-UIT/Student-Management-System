@@ -131,8 +131,7 @@ const updateSubject = async (req, res) => {
 }
 
 const getSubjects = async (req, res) => {
-    const subjects = Subject.find()
-
+    const subjects = await Subject.find()
     res.status(200).json(subjects)
 }
 
