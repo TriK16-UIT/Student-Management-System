@@ -8,19 +8,21 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
+import { useSignupStudent } from "../../../../hooks/useSignupStudent";
 
-const  DialogAddStudent = ({ params }) => {
+const DialogAddStudent = () => {
   const isNonMobile = useMediaQuery("(min-width:600px)");
   
-  const { row } = params;
-  
-  const handleFormSubmit = (values) => {
+  const { signup, error, isLoading } = useSignupStudent();
+
+  const handleFormSubmit = async (values) => {
+    await signup(values.firstName, values.lastName, values.dateOfBirth, values.address, values.email, values.gender);
     console.log(values);
   };
 
   return (
     <Box m="20px" textAlign="center">
-      <Header title="Hồ sơ sinh viên"/>
+      <Header title="Thêm sinh viên"/>
       <Formik
         onSubmit={handleFormSubmit}
         initialValues={initialValues}
@@ -48,14 +50,27 @@ const  DialogAddStudent = ({ params }) => {
                 fullWidth
                 variant="filled"
                 type="text"
-                label="Họ và tên"
+                label="Họ"
                 onBlur={handleBlur}
                 onChange={handleChange}
-                value={values.name}
-                name="name"
-                error={!!touched.name && !!errors.name}
-                helperText={touched.name && errors.name}
-                sx={{ gridColumn: "span 4" }}
+                value={values.firstName}
+                name="firstName"
+                error={!!touched.firstName && !!errors.firstName}
+                helperText={touched.firstName && errors.firstName}
+                sx={{ gridColumn: "span 2" }}
+              />
+              <TextField
+                fullWidth
+                variant="filled"
+                type="text"
+                label="Tên"
+                onBlur={handleBlur}
+                onChange={handleChange}
+                value={values.lastName}
+                name="lastName"
+                error={!!touched.lastName && !!errors.lastName}
+                helperText={touched.lastName && errors.lastName}
+                sx={{ gridColumn: "span 2" }}
               />
               
               <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -63,18 +78,17 @@ const  DialogAddStudent = ({ params }) => {
                   fullWidth
                   format="DD/MM/YYYY"
                   label="Ngày sinh"
-                  value={values.ymd}
+                  value={values.dateOfBirth}
                   onChange={(newValue) => {
-                    setFieldValue("ymd", newValue);
+                    setFieldValue("dateOfBirth", newValue);
                   }}
                   renderInput={(params) => (
                     <TextField
                       {...params}
                       variant="filled"
                       onBlur={handleBlur}
-                      error={!!touched.ymd && !!errors.ymd}
-                      helperText={touched.ymd && errors.ymd}
-                      
+                      error={!!touched.dateOfBirth && !!errors.dateOfBirth}
+                      helperText={touched.dateOfBirth && errors.dateOfBirth}
                     />
                   )}
                   sx={{ gridColumn: "span 2" }}
@@ -94,8 +108,8 @@ const  DialogAddStudent = ({ params }) => {
                   name="gender"
                   error={!!touched.gender && !!errors.gender}
                 >
-                  <MenuItem value="Nam">Nam</MenuItem>
-                  <MenuItem value="Nữ">Nữ</MenuItem>
+                  <MenuItem value="male">Nam</MenuItem>
+                  <MenuItem value="female">Nữ</MenuItem>
                 </Select>
               </FormControl>
               <TextField
@@ -125,20 +139,12 @@ const  DialogAddStudent = ({ params }) => {
                 sx={{ gridColumn: "span 4" }}
               />
             </Box>
-            {params==="add" && 
             <Box display="flex" justifyContent="end" mt="20px">
-              <Button type="submit" color="secondary" variant="contained">
+              <Button type="submit" color="secondary" variant="contained" disabled={isLoading}>
                 Thêm học sinh
               </Button>
             </Box>
-            }
-             {params==="edit" && 
-            <Box display="flex" justifyContent="end" mt="20px">
-              <Button type="submit" color="secondary" variant="contained">
-                Hoàn tất
-              </Button>
-            </Box>
-            }
+            {error && <div>{error}</div>}
           </form>
         )}
       </Formik>
@@ -147,16 +153,18 @@ const  DialogAddStudent = ({ params }) => {
 };
 
 const checkoutSchema = yup.object().shape({
-  name: yup.string().required("Vui lòng nhập"),
-  ymd: yup.date().required("Vui lòng nhập"),
+  firstName: yup.string().required("Vui lòng nhập"),
+  lastName: yup.string().required("Vui lòng nhập"),
+  dateOfBirth: yup.date().required("Vui lòng nhập"),
   gender: yup.string().required("Vui lòng nhập"),
   email: yup.string().email("Email không hợp lệ").required("Vui lòng nhập"),
   address: yup.string().required("Vui lòng nhập"),
 });
 
 const initialValues = {
-  name: "",
-  ymd: null,
+  firstName: "",
+  lastName: "",
+  dateOfBirth: null,
   gender: "",
   email: "",
   address: "",

@@ -1,33 +1,36 @@
 import { useState } from 'react';
 import { useAuthContext } from './useAuthContext';
+import { useStudentInfsContext } from './useStudentContext';
 
-export const useSignup = () => {
+export const useSignupStudent = () => {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { dispatch } = useStudentInfsContext();
+  const {user} = useAuthContext()
 
-  const {user, dispatch } = useAuthContext()
-
-  const signup = async (firstName, lastName, email, username, password, role, subjectName) => {
+  const signup = async (firstName, lastName, dateOfBirth, address, email, gender) => {
     setIsLoading(true);
     setError(null);
 
-    const response = await fetch('http://localhost:4000/api/teacher/', {
+    const response = await fetch('http://localhost:4000/api/student', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json', 
         'Authorization': `Bearer ${user.token}`
       },
-      body: JSON.stringify({ firstName, lastName, email, username, password, role, subjectName })
+      body: JSON.stringify({ firstName, lastName, dateOfBirth, address, email, gender })
     });
 
     const json = await response.json();
 
     if (!response.ok) {
-      setIsLoading(false);
       setError(json.error);
-    } else {
       setIsLoading(false);
-      dispatch({ type: 'CREATE_USER', payload: json });
+    }
+
+    if (response.ok) {
+      setIsLoading(false);
+      dispatch({type: 'CREATE_STUDENTINF', payload: json});
     }
   };
 

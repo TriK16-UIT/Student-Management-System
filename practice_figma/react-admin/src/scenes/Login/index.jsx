@@ -61,7 +61,7 @@ const LoginPage = () => {
                   alt="profile-user"
                   width="100px"
                   height="100px"
-                  src={isToggled ? `../../assets/5292b36d28463a68e5a54962f01adb47.jpg` : `../../assets/stelle-honkai-star-rail.png`}
+                  src={isToggled ? `../../assets/Screenshot 2024-06-19 232207.png` : `../../assets/608-6081199_teacher-registration-anastasia-beverly-hills-logo-vector-hd.png`}
                   style={{ cursor: "pointer", borderRadius: "50%" }}
                 />
               </Box>

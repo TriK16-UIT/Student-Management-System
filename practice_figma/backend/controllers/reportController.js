@@ -93,8 +93,54 @@ const getTermReport = async (req, res) => {
     }
 }
 
+const getAllStudentsWithAverageScores = async (req, res) => {
+    try {
+        const students = await Student.find()
+
+        const reportData = await Promise.all(students.map(async (student) => {
+            const termIGrades = await Grades.find({
+                StudentID: student._id,
+                term: 'I'
+            })
+
+            const termIIGrades = await Grades.find({
+                StudentID: student._id,
+                term: 'II'
+            })
+
+            const calculateAverage = (grades) => {
+                const totalScore = grades.reduce((acc, grade) => acc + grade.scoreAverage, 0)
+                return grades.length > 0 ? (totalScore / grades.length) : 0
+            }
+
+            const termIAverage = calculateAverage(termIGrades)
+            const termIIAverage = calculateAverage(termIIGrades)
+
+            let classInfo = 'No Class';
+            if (student.ClassID) {
+                const classData = await Class.findById(student.ClassID);
+                if (classData) {
+                    classInfo = `${classData.gradeLevel}${classData.name}`;
+                }
+            }
+
+            return {
+                studentID: student._id,
+                studentName: student.firstName + ' ' + student.lastName,
+                className: classInfo,
+                termIAverage: termIAverage.toFixed(2),
+                termIIAverage: termIIAverage.toFixed(2)
+            }
+        }))
+
+        res.status(200).json(reportData)
+    } catch (error) {
+        res.status(400).json({ error: error.message })
+    }
+}
 
 module.exports = {
     getTermReport,
-    getSubjectReport
+    getSubjectReport,
+    getAllStudentsWithAverageScores
 }

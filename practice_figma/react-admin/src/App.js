@@ -8,15 +8,15 @@ import Sidebar from "./scenes/global/Sidebar";
 import StuAdmission from "./scenes/Stu_Admission";
 import ClaListEdit from "./scenes/Cla_List/ClaListEdit";
 import ClaList from "./scenes/Cla_List/ClaList";
-import CreClasList from "./scenes/Cla_List/CreClasList";
 import StuSearch from "./scenes/Stu_Search";
 import SubScores from "./scenes/Sub_Score";
 import OutReport from "./scenes/Out_Report/OutReport";
-import ReportSubject from "./scenes/Out_Report/ReportSubject";
+
 import ReportSemester from "./scenes/Out_Report/ReportSemester";
 import LoginPage from "./scenes/Login";
 import UserManage from "./scenes/User_Management";
 import { useAuthContext } from "./hooks/useAuthContext";
+import ReportSubject from "./scenes/Out_Report/ReportSubject";
 
 function App() {
   const [theme, colorMode] = useMode();
@@ -40,8 +40,7 @@ function App() {
               <Route path="/" element={user ? <Dashboard /> :  <Navigate to="/login" />} />
               <Route path="/student_admission" element={user ?<StuAdmission /> : <Navigate to="/login" />} />
               <Route path="/class_list" element={user ? <ClaList /> : <Navigate to="/login" />} />
-              <Route path="/class_list/edit" element={user ? <CreClasList /> : <Navigate to="/login" />} />
-              <Route path="/class_list/*" element={user ? <ClaListEdit /> : <Navigate to="/login" />} />
+              <Route path="/class_list/:id" element={user ? <ClaListEdit /> : <Navigate to="/login" />} />
               <Route path="/student_look_up" element={user ? <StuSearch /> : <Navigate to="/login" />} />
               <Route path="/enter_subject_scores" element={user ? <SubScores /> : <Navigate to="/login" />} />
               <Route path="/summary_report" element={user ? <OutReport /> : <Navigate to="/login" />} />

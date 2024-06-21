@@ -1,59 +1,94 @@
-import * as React from 'react';
+import React, { useState, useEffect } from "react";
 import Box from '@mui/material/Box';
-import { DataGrid, GridToolbar, GridToolbarQuickFilter } from '@mui/x-data-grid';
-import { mockDataTCSV } from '../../data/mockData';
+import { DataGrid, GridToolbarQuickFilter } from '@mui/x-data-grid';
 import { tokens } from '../../theme';
 import { useTheme } from '@mui/material';
 import Header from '../../components/Header';
+import { useAuthContext } from "../../context/AuthContext";
 
 const CustomToolbar = () => {
-    return (
-      <Box sx={{ p: 2 }}>
-        <GridToolbarQuickFilter 
-          sx={{
-            '& .MuiInputBase-root': {
-              border: '1px solid',
-              borderColor: 'gray',
-              borderRadius: '4px',
-            },
-            '& .MuiInputBase-input': {
-              padding: '10px 5px', 
-            },
-            '& .MuiSvgIcon-root': {
-                margin: '8px', 
-            },
-          }}
-          placeholder="Tìm kiếm"
-        />
-      </Box>
-    );
-  };
+  return (
+    <Box sx={{ p: 2 }}>
+      <GridToolbarQuickFilter 
+        sx={{
+          '& .MuiInputBase-root': {
+            border: '1px solid',
+            borderColor: 'gray',
+            borderRadius: '4px',
+          },
+          '& .MuiInputBase-input': {
+            padding: '10px 5px', 
+          },
+          '& .MuiSvgIcon-root': {
+              margin: '8px', 
+          },
+        }}
+        placeholder="Tìm kiếm"
+      />
+    </Box>
+  );
+};
 
 const StuSearch = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const { user } = useAuthContext();
+  const [classData, setClassData] = useState([]);
+
+  useEffect(() => {
+    const fetchClassData = async () => {
+      try {
+        const response = await fetch(`http://localhost:4000/api/report/`, {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+          method: "GET",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch class data");
+        }
+
+        const data = await response.json();
+        setClassData(data);
+      } catch (error) {
+        console.error("Error fetching class data:", error);
+      }
+    };
+
+    fetchClassData();
+  }, [user]);
+
+  const rowsClassData = classData.map((student, index) => ({
+    id: index + 1,
+    studentID: student.studentID,
+    studentName: student.studentName,
+    className: student.className,
+    termIAverage: student.termIAverage,
+    termIIAverage: student.termIIAverage
+  }));
 
   const columns = [
     { field: "id", headerName: "STT", width: 90 },
     {
-      field: "name",
+      field: "studentName",
       headerName: "Họ và tên",
       flex: 1,
       cellClassName: "name-column--cell",
     },
     {
-      field: "class",
+      field: "className",
       headerName: "Lớp",
       width: 90,
     },
     {
-      field: "TBHK1",
+      field: "termIAverage",
       headerName: "TB Học kỳ I",
       flex: 1,
       type: "number",
     },
     {
-      field: "TBHK2",
+      field: "termIIAverage",
       headerName: "TB Học kỳ II",
       flex: 1,
       type: "number",
@@ -91,7 +126,7 @@ const StuSearch = () => {
         }}
       >
         <DataGrid
-          rows={mockDataTCSV}
+          rows={rowsClassData}
           columns={columns}
           rowsPerPageOptions={[5, 10, 20]}
           disableColumnFilter

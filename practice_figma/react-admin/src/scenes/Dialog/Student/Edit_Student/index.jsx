@@ -1,29 +1,134 @@
-import { Box, Button, FormControl, InputLabel, MenuItem, Select, TextField } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import {
+  Box,
+  Button,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
+} from "@mui/material";
 import { Formik } from "formik";
 import * as yup from "yup";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import Header from "../../../../components/Header";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import dayjs from "dayjs";
+import { useStudentInfsContext } from "../../../../hooks/useStudentContext";
+import { useAuthContext } from "../../../../hooks/useAuthContext";
 
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import dayjs from 'dayjs';
-
-const  DialogAddStudent = ({ params }) => {
+const DialogUpdateStudent = ({ studentId }) => {
   const isNonMobile = useMediaQuery("(min-width:600px)");
+  const { dispatch } = useStudentInfsContext();
+  const { user } = useAuthContext();
+  const [studentData, setStudentData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    dispatch({ type: 'START_EDITING', payload: studentId });
   
-  const { row } = params;
+    const fetchStudentInf = async () => {
+      try {
+        const response = await fetch(`http://localhost:4000/api/student/${studentId}`, {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+          method: "GET",
+        });
+        if (!response.ok) {
+          throw new Error("Failed to fetch student information");
+        }
+        const json = await response.json();
+        console.log("Fetched student:", json);
+        setStudentData(json);
+        setLoading(false);
+        dispatch({ type: "GET_STUDENTINF", payload: json });
+      } catch (error) {
+        console.error("Error fetching student information:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchStudentInf();
+  }, [studentId, user, dispatch]);
+
+  const handleFormSubmit = async (values) => {
+    if (!user) {
+      console.log("You must be logged in");
+      return;
+    }
   
-  const handleFormSubmit = (values) => {
-    console.log(values);
+    console.log("Submitting values:", values);
+  
+    try {
+      const response = await fetch(`http://localhost:4000/api/student/${studentId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${user.token}`,
+        },
+        body: JSON.stringify(values),
+      });
+      if (response.ok) {
+        const updatedStudentInf = await response.json();
+        dispatch({ type: "UPDATE_STUDENTINF", payload: updatedStudentInf });
+      } else {
+        const errorData = await response.json();
+        console.error("Failed to update student information", errorData);
+      }
+    } catch (error) {
+      console.error("Error updating student information:", error);
+    }
   };
+
+  const initialValues = studentData
+    ? {
+        firstName: studentData.firstName,
+        lastName: studentData.lastName,
+        dateOfBirth: dayjs(studentData.dateOfBirth),
+        gender: studentData.gender,
+        email: studentData.email,
+        address: studentData.address,
+      }
+    : {
+        firstName: "",
+        lastName: "",
+        dateOfBirth: null,
+        gender: "",
+        email: "",
+        address: "",
+      };
+
+  const checkoutSchema = yup.object().shape({
+    firstName: yup.string().required("Vui lòng nhập"),
+    lastName: yup.string().required("Vui lòng nhập"),
+    dateOfBirth: yup.date().required("Vui lòng nhập").nullable(),
+    gender: yup.string().required("Vui lòng nhập"),
+    email: yup.string().email("Email không hợp lệ").required("Vui lòng nhập"),
+    address: yup.string().required("Vui lòng nhập"),
+  });
+
+  const handleEditChange = (e) => {
+    dispatch({
+      type: 'UPDATE_FORM',
+      payload: { [e.target.name]: e.target.value }
+    });
+  };
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
 
   return (
     <Box m="20px" textAlign="center">
-      <Header title="Hồ sơ sinh viên"/>
+      <Header title="Chỉnh sửa Hồ sơ" />
+      
       <Formik
         onSubmit={handleFormSubmit}
         initialValues={initialValues}
+        enableReinitialize={true}
         validationSchema={checkoutSchema}
       >
         {({
@@ -50,61 +155,90 @@ const  DialogAddStudent = ({ params }) => {
                 type="text"
                 label="Họ và tên"
                 onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.name}
-                name="name"
-                error={!!touched.name && !!errors.name}
-                helperText={touched.name && errors.name}
+                onChange={(e) => {
+                  handleChange(e);
+                  handleEditChange(e);
+                }}
+                value={values.firstName}
+                name="firstName"
+                error={!!touched.firstName && !!errors.firstName}
+                helperText={touched.firstName && errors.firstName}
                 sx={{ gridColumn: "span 4" }}
               />
-              
+
+              <TextField
+                fullWidth
+                variant="filled"
+                type="text"
+                label="Tên"
+                onBlur={handleBlur}
+                onChange={(e) => {
+                  handleChange(e);
+                  handleEditChange(e);
+                }}
+                value={values.lastName}
+                name="lastName"
+                error={!!touched.lastName && !!errors.lastName}
+                helperText={touched.lastName && errors.lastName}
+                sx={{ gridColumn: "span 4" }}
+              />
+
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
-                  fullWidth
-                  format="DD/MM/YYYY"
                   label="Ngày sinh"
-                  value={values.ymd}
+                  name="dateOfBirth"
+                  format="DD/MM/YYYY"
+                  value={values.dateOfBirth}
                   onChange={(newValue) => {
-                    setFieldValue("ymd", newValue);
+                    setFieldValue("dateOfBirth", newValue);
+                    handleEditChange({
+                      target: {
+                        name: "dateOfBirth",
+                        value: newValue,
+                      },
+                    });
                   }}
+                  onBlur={handleBlur}
                   renderInput={(params) => (
                     <TextField
                       {...params}
                       variant="filled"
-                      onBlur={handleBlur}
-                      error={!!touched.ymd && !!errors.ymd}
-                      helperText={touched.ymd && errors.ymd}
-                      
+                      error={!!touched.dateOfBirth && !!errors.dateOfBirth}
+                      helperText={touched.dateOfBirth && errors.dateOfBirth}
                     />
                   )}
                   sx={{ gridColumn: "span 2" }}
                 />
               </LocalizationProvider>
-              <FormControl
-                fullWidth
-                variant="filled"
-                sx={{ gridColumn: "span 2" }}
-              >
+
+              <FormControl fullWidth variant="filled" sx={{ gridColumn: "span 2" }}>
                 <InputLabel>Giới tính</InputLabel>
                 <Select
                   label="Giới tính"
                   onBlur={handleBlur}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    handleChange(e);
+                    handleEditChange(e);
+                  }}
                   value={values.gender}
                   name="gender"
                   error={!!touched.gender && !!errors.gender}
                 >
-                  <MenuItem value="Nam">Nam</MenuItem>
-                  <MenuItem value="Nữ">Nữ</MenuItem>
+                  <MenuItem value="male">Nam</MenuItem>
+                  <MenuItem value="female">Nữ</MenuItem>
                 </Select>
               </FormControl>
+              
               <TextField
                 fullWidth
                 variant="filled"
                 type="text"
                 label="Địa chỉ"
                 onBlur={handleBlur}
-                onChange={handleChange}
+                onChange={(e) => {
+                  handleChange(e);
+                  handleEditChange(e);
+                }}
                 value={values.address}
                 name="address"
                 error={!!touched.address && !!errors.address}
@@ -117,7 +251,10 @@ const  DialogAddStudent = ({ params }) => {
                 type="text"
                 label="Email"
                 onBlur={handleBlur}
-                onChange={handleChange}
+                onChange={(e) => {
+                  handleChange(e);
+                  handleEditChange(e);
+                }}
                 value={values.email}
                 name="email"
                 error={!!touched.email && !!errors.email}
@@ -125,20 +262,11 @@ const  DialogAddStudent = ({ params }) => {
                 sx={{ gridColumn: "span 4" }}
               />
             </Box>
-            {params==="add" && 
-            <Box display="flex" justifyContent="end" mt="20px">
-              <Button type="submit" color="secondary" variant="contained">
-                Thêm học sinh
-              </Button>
-            </Box>
-            }
-             {params==="edit" && 
             <Box display="flex" justifyContent="end" mt="20px">
               <Button type="submit" color="secondary" variant="contained">
                 Hoàn tất
               </Button>
             </Box>
-            }
           </form>
         )}
       </Formik>
@@ -146,20 +274,4 @@ const  DialogAddStudent = ({ params }) => {
   );
 };
 
-const checkoutSchema = yup.object().shape({
-  name: yup.string().required("Vui lòng nhập"),
-  ymd: yup.date().required("Vui lòng nhập"),
-  gender: yup.string().required("Vui lòng nhập"),
-  email: yup.string().email("Email không hợp lệ").required("Vui lòng nhập"),
-  address: yup.string().required("Vui lòng nhập"),
-});
-
-const initialValues = {
-  name: "",
-  ymd: null,
-  gender: "",
-  email: "",
-  address: "",
-};
-
-export default DialogAddStudent;
+export default DialogUpdateStudent;

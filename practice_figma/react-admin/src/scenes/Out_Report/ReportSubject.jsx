@@ -1,107 +1,191 @@
 import React, { useState, useEffect } from 'react';
-import { Select, MenuItem, FormControl, InputLabel, Grid, Box } from '@mui/material';
+import { Select, MenuItem, FormControl, InputLabel, Grid, Box, Button } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
-import { mockDataBeta } from "../../data/mockData";
+
 import Header from '../../components/Header';
 import { useTheme } from '@emotion/react';
 import { tokens } from '../../theme';
+import { useAuthContext } from "../../context/AuthContext";
 
 const ReportSubject = () => {
-  const [selectedSubject, setSelectedSubject] = useState('');
-  const [selectedTerm, setSelectedTerm] = useState('');
-  const [rows, setRows] = useState([]);
-
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const { user } = useAuthContext();
+
+  const [termData, setTermData] = useState([]);
+  const [subjectData, setSubjectData] = useState([]);
+  const [selectedTerm, setSelectedTerm] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState("");
 
   useEffect(() => {
-    setRows(getFilteredGrades());
-  }, [selectedSubject, selectedTerm]);
+    const fetchSubjectData = async () => {
+      try {
+        const response = await fetch(`http://localhost:4000/api/subject`, {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+          method: "GET",
+        });
 
-  const handleSubjectChange = (event) => {
-    setSelectedSubject(event.target.value);
+        if (!response.ok) {
+          throw new Error("Failed to fetch subject data");
+        }
+
+        const data = await response.json();
+        // Format subject names to Vietnamese
+        const formattedData = data.map(subject => ({
+          ...subject,
+          name: formatSubjectName(subject.name),
+        }));
+        setSubjectData(formattedData);
+      } catch (error) {
+        console.error("Error fetching subject data:", error);
+      }
+    };
+
+    fetchSubjectData();
+  }, [user]);
+
+  const formatSubjectName = (name) => {
+    // Example of basic formatting, adjust as needed
+    switch (name.toLowerCase()) {
+      case 'math':
+        return 'Toán';
+      case 'physics':
+        return 'Vật lý';
+      case 'chemistry':
+        return 'Hóa học';
+      case 'biology':
+        return 'Sinh học';
+      case 'history':
+        return 'Lịch sử';
+      case 'geography':
+        return 'Địa lý';
+      case 'literature':
+        return 'Ngữ văn';
+      case 'ethics':
+        return 'Đạo đức';
+      case 'pe':
+        return 'Thể dục';
+      default:
+        return name; // return original name if no match
+    }
   };
+
+  useEffect(() => {
+    if (selectedTerm && selectedSubject) {
+      const fetchTermData = async () => {
+        try {
+          const response = await fetch(`http://localhost:4000/api/report/term/${selectedTerm}/subject/${selectedSubject}`, {
+            headers: {
+              Authorization: `Bearer ${user.token}`,
+            },
+            method: "GET",
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to fetch term data");
+          }
+
+          const data = await response.json();
+          setTermData(data);
+        } catch (error) {
+          console.error("Error fetching term data:", error);
+        }
+      };
+
+      fetchTermData();
+    }
+  }, [selectedTerm, selectedSubject, user]);
 
   const handleTermChange = (event) => {
     setSelectedTerm(event.target.value);
   };
 
-  const getFilteredGrades = () => {
-    if (!selectedSubject || !selectedTerm) {
-      return [];
-    }
-
-    // Filter grades by selected subject and term
-    const filteredGrades = mockDataBeta.grades.filter(
-      (grade) =>
-        grade.SubjectID === selectedSubject && grade.Term === parseInt(selectedTerm, 10)
-    );
-
-    // Group grades by class
-    const classGroups = {};
-    filteredGrades.forEach((grade) => {
-      const student = mockDataBeta.students.find((s) => s.StudentID === grade.StudentID);
-      if (student) {
-        if (!classGroups[student.ClassID]) {
-          classGroups[student.ClassID] = {
-            className: mockDataBeta.classes.find((cls) => cls.ClassID === student.ClassID).Name,
-            classSize: 0,
-            numPass: 0
-          };
-        }
-        classGroups[student.ClassID].classSize += 1;
-        if (grade.ScoreAverage >= 5) {
-          classGroups[student.ClassID].numPass += 1;
-        }
-      }
-    });
-
-    // Format the result for the DataGrid
-    const classData = Object.entries(classGroups).map(([classID, data], index) => ({
-      id: index + 1,
-      className: data.className,
-      classSize: data.classSize,
-      numPass: data.numPass,
-      rate: ((data.numPass / data.classSize) * 100).toFixed(2) + '%'
-    }));
-
-    return classData;
+  const handleSubjectChange = (event) => {
+    setSelectedSubject(event.target.value);
   };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    // Trigger the data fetch based on the selected term and subject
+    if (selectedTerm && selectedSubject) {
+      const fetchTermData = async () => {
+        try {
+          const response = await fetch(`http://localhost:4000/api/report/term/${selectedTerm}/subject/${selectedSubject}`, {
+            headers: {
+              Authorization: `Bearer ${user.token}`,
+            },
+            method: "GET",
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to fetch term data");
+          }
+
+          const data = await response.json();
+          setTermData(data);
+        } catch (error) {
+          console.error("Error fetching term data:", error);
+        }
+      };
+
+      fetchTermData();
+    }
+  };
+
+  const rows = termData.map((student, index) => ({
+    id: index + 1,
+    className: student.className,
+    totalStudents: student.totalStudents,
+    passingStudents: student.passingStudents,
+    passRate: student.passRate
+  }));
 
   const columns = [
     { field: 'id', headerName: 'ID', width: 90 },
     { field: 'className', headerName: 'Lớp', flex: 1 },
-    { field: 'classSize', headerName: 'Sỉ số', flex: 1 },
-    { field: 'numPass', headerName: 'Số lượng đạt', flex: 1 },
-    { field: 'rate', headerName: 'Tỉ lệ', width: 180 },
+    { field: 'totalStudents', headerName: 'Sỉ số', flex: 1 },
+    { field: 'passingStudents', headerName: 'Số lượng đạt', flex: 1 },
+    { field: 'passRate', headerName: 'Tỉ lệ', width: 180 },
   ];
 
   return (
     <Box m="20px" mb="20px">
-      <Header title="Lập bảng tổng kết" subtitle="Môn học" />
-      <Grid container spacing={3}>
-        <Grid item xs={4}>
-          <FormControl fullWidth>
-            <InputLabel>Subject</InputLabel>
-            <Select value={selectedSubject} onChange={handleSubjectChange}>
-              {mockDataBeta.subjects.map((subject) => (
-                <MenuItem key={subject.SubjectID} value={subject.SubjectID}>
-                  {subject.Name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+      <Header title="Lập bảng tổng kết" subtitle="Học kỳ và Môn học" />
+      <form onSubmit={handleSubmit}>
+        <Grid container spacing={3}>
+          <Grid item xs={4}>
+            <FormControl fullWidth>
+              <InputLabel>Học kỳ</InputLabel>
+              <Select
+                value={selectedTerm || ''}
+                onChange={handleTermChange}
+                label="Học kỳ"
+              >
+                <MenuItem value={"I"}>1</MenuItem>
+                <MenuItem value={"II"}>2</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={4}>
+            <FormControl fullWidth>
+              <InputLabel>Môn học</InputLabel>
+              <Select
+                value={selectedSubject || ''}
+                onChange={handleSubjectChange}
+                label="Môn học"
+              >
+                {subjectData.map((subject) => (
+                  <MenuItem key={subject._id} value={subject._id}>
+                    {formatSubjectName(subject.name)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
         </Grid>
-        <Grid item xs={4}>
-          <FormControl fullWidth>
-            <InputLabel>Term</InputLabel>
-            <Select value={selectedTerm} onChange={handleTermChange}>
-              <MenuItem value={1}>1</MenuItem>
-              <MenuItem value={2}>2</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-      </Grid>
+      </form>
 
       <Box
         m="40px 0 0 0"
@@ -130,7 +214,6 @@ const ReportSubject = () => {
           rows={rows}
           columns={columns}
           pageSize={5}
-          checkboxSelection
           disableSelectionOnClick
         />
       </Box>

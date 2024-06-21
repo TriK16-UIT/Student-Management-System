@@ -1,38 +1,136 @@
+import React, { useState, useEffect } from "react";
 import { Box, Button, Dialog, DialogContent, DialogTitle, IconButton, Stack, TextField, useTheme } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
-import { useLocation, Link, useNavigate, Form } from "react-router-dom";
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import { useParams } from "react-router-dom";
 import Header from "../../components/Header";
-import { useState } from "react";
 import CloseIcon from '@mui/icons-material/Close';
-import { mockDataTNSV } from "../../data/mockData";
+import { useAuthContext } from "../../context/AuthContext";
+import DeleteStudentID from "./Delete_Student_wClass";
+import { useClassMemberContext } from "../../context/ClassMemberContext";
+
 const ClaListEdit = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-  const location = useLocation();
-  const classData = location.state?.classData || { students: [] };
+  const { id } = useParams(); // Extract the ID from the URL
+  const [classData, setClassData] = useState({});
+  const [studentsWithoutClass, setStudentsWithoutClass] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [arrIds, setArrIds] = useState([]);
 
+  const { user } = useAuthContext();
+  const { classMembers, dispatch } = useClassMemberContext();
 
-  const [open,openchange]=useState(false);
-    const functionopenpopup=()=>{
-        openchange(true);
+  useEffect(() => {
+    const fetchClassData = async () => {
+      try {
+        const response = await fetch(`http://localhost:4000/api/class/${id}`, {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+          method: "GET",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch class data");
+        }
+
+        const data = await response.json();
+        setClassData(data);
+      } catch (error) {
+        console.error("Error fetching class data:", error);
+      }
+    };
+
+    fetchClassData();
+  }, [id, user]);
+
+  useEffect(() => {
+    const fetchStudentsByClass = async () => {
+      const response = await fetch(`http://localhost:4000/api/student/byClass/${id}`, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch students by class");
+      }
+
+      const data = await response.json();
+      dispatch({ type: "SET_CLASS_MEMBERS", payload: data });
+    };
+
+    fetchStudentsByClass();
+  }, [id, user, dispatch]);
+  
+  const fetchStudentsWithoutClass = async () => {
+    try {
+      const response = await fetch(`http://localhost:4000/api/student/withoutClass`, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch students without class");
+      }
+
+      const data = await response.json();
+      setStudentsWithoutClass(data);
+    } catch (error) {
+      console.error("Error fetching students without class:", error);
     }
-    const closepopup=()=>{
-        openchange(false);
-    }
+  };
 
 
-  const filteredDataTNSV = mockDataTNSV
-  .filter(student => student.access === "noclass")
-  .map((student, index) => ({
-    ...student,
-    stt: index + 1,  // Add sequential number starting from 1
-  }));
+  useEffect(() => {
+    fetchStudentsWithoutClass();
+  }, [user]);
 
+  const handleOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleAddToClass = async () => {
+    console.log(arrIds); // Use the new selection model
+    const selectedStudents = studentsWithoutClass.filter(student => arrIds.includes(student._id));
+
+    const promises = selectedStudents.map(async (student) => {
+      const response = await fetch(`http://localhost:4000/api/student/${student._id}`, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+          "Content-Type": "application/json",
+        },
+        method: "PATCH",
+        body: JSON.stringify({
+          ClassID: id
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update student ${student._id}`);
+      }
+      const patchedStudent = await response.json();
+      return patchedStudent;
+    });
+
+    const results = await Promise.all(promises);
+    console.log("Updated students:", results);
+
+    dispatch({ type: "ADD_CLASS_MEMBERS", payload: results });
+    fetchStudentsWithoutClass();
+    handleClose(); // Close the dialog
+  };
 
   const columns_students = [
-    { field: "stt", headerName: "STT", width: 90 },
+    { field: "id", headerName: "STT", width: 90 },
     {
       field: "name",
       headerName: "Họ và tên",
@@ -45,14 +143,15 @@ const ClaListEdit = () => {
       type: "number",
       headerAlign: "left",
       align: "left",
-      flex: 1
+      flex: 1,
     },
     {
       field: "email",
       headerName: "Email",
-      flex: 1
+      flex: 1,
     },
   ];
+
   const columns = [
     { field: "id", headerName: "STT", width: 90 },
     {
@@ -70,7 +169,7 @@ const ClaListEdit = () => {
     {
       field: "email",
       headerName: "Email",
-      flex: 1
+      flex: 1,
     },
     {
       headerName: "Hành động",
@@ -85,86 +184,125 @@ const ClaListEdit = () => {
             justifyContent="center"
             borderRadius="4px"
           >
-            <Button
-              type="button"
-              color="primary"
-              variant="contained"
-              endIcon={<DeleteOutlineIcon />}
-              sx={{
-                backgroundColor: '#f44336',
-                '&:hover': {
-                  backgroundColor: '#d32f2f',
-                },
-              }}
-            >
-              Xóa
-            </Button>
+            <DeleteStudentID params={params} />
           </Box>
         );
       },
     },
   ];
 
-  
+  const formatGender = (gender) => {
+    switch (gender) {
+      case 'male':
+        return 'Nam';
+      case 'female':
+        return 'Nữ';
+      default:
+        return gender;
+    }
+  };
+
+  const rowsStudentsWithoutClass = studentsWithoutClass.map((student, index) => ({
+    id: index + 1,
+    _id: student._id,
+    name: `${student.firstName} ${student.lastName}`,
+    gender: formatGender(student.gender),
+    email: student.email,
+  }));
+
+  const rowsstudentsByClass = classMembers ? classMembers.map((student, index) => ({
+    id: index + 1,
+    _id: student._id,
+    name: `${student.firstName} ${student.lastName}`,
+    gender: formatGender(student.gender),
+    email: student.email,
+  })) : [];
 
   return (
     <Box m="20px">
-
       <Dialog
-      open={open} 
-      onClose={closepopup} 
-      fullWidth maxWidth="md" 
+        open={open}
+        onClose={handleClose}
+        fullWidth
+        maxWidth="md"
       >
         <DialogTitle
-        sx={{
-          backgroundColor: colors.purpleAccent[500], 
-        }}
-        > <IconButton onClick={closepopup} style={{float:'right'}}><CloseIcon color={colors.primary[500]}></CloseIcon></IconButton>  </DialogTitle>
-            <DialogContent
-            sx={{
-              backgroundColor: colors.grey[700], 
-            }}
+          sx={{
+            backgroundColor: colors.purpleAccent[500],
+          }}
+        >
+          <IconButton onClick={handleClose} style={{ float: 'right' }}>
+            <CloseIcon color={colors.primary[500]} />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent
+          sx={{
+            backgroundColor: colors.grey[700],
+          }}
+        >
+          <Stack spacing={2} margin={2}>
+            <DataGrid
+              checkboxSelection
+              rows={rowsStudentsWithoutClass}
+              columns={columns_students}
+              getRowId={(row) => row._id}
+              disableRowSelectionOnClick
+              onRowSelectionModelChange={(data) => {
+                setArrIds(data);
+                console.log(data); // Log the new selection model
+              }}
+            />
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={handleAddToClass}
+              disabled={studentsWithoutClass.length === 0}
             >
-                {/* <DialogContentText>Do you want remove this user?</DialogContentText> */}
-                <Stack spacing={2} margin={2}>
-                
-                <DataGrid checkboxSelection rows={filteredDataTNSV} columns={columns_students} />
-                <Button 
-                variant="contained" 
-                color="secondary"
-                onClick={() => {
-                  functionopenpopup();
-                  }}
-                >Thêm sinh viên
-                </Button>
-                </Stack>
-            </DialogContent>
-        </Dialog>
+              Thêm sinh viên vào lớp
+            </Button>
+          </Stack>
+        </DialogContent>
+      </Dialog>
 
-      <Header title="Danh sách lớp"/>
+      <Header title="Danh sách lớp" />
 
       <Box display="flex" justifyContent="space-between" mb="20px">
         <Box display="flex" gap="10px">
-        <TextField
-          fullWidth
-          label="Lớp"
-          defaultValue={classData.class}
-        />
-        <TextField
-          fullWidth
-          label="Sỉ số tối đa"
-          defaultValue={classData.classSize}
-        />
+          <TextField
+            fullWidth
+            label="Tên lớp"
+            value={classData.name || ""}
+            InputProps={{
+              readOnly: true,
+              sx: {
+                "&:hover": {
+                  cursor: "default",
+                },
+              },
+            }}
+          />
+          <TextField
+            fullWidth
+            label="Khối"
+            value={classData.gradeLevel || ""}
+            InputProps={{
+              readOnly: true,
+              sx: {
+                "&:hover": {
+                  cursor: "default",
+                },
+              }}
+            }
+          />
         </Box>
-        <Button 
-        variant="contained" 
-        color="secondary"
-        onClick={() => {
-          functionopenpopup();
-          }}
-        >Thêm sinh viên</Button>
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={handleOpen}
+        >
+          Thêm sinh viên
+        </Button>
       </Box>
-        
 
       <Box
         m="40px 0 0 0"
@@ -181,7 +319,7 @@ const ClaListEdit = () => {
           },
           "& .MuiDataGrid-columnHeader": {
             backgroundColor: colors.purpleAccent[500],
-            borderBottom: "none"
+            borderBottom: "none",
           },
           "& .MuiDataGrid-virtualScroller": {
             backgroundColor: colors.primary[400],
@@ -195,7 +333,11 @@ const ClaListEdit = () => {
           },
         }}
       >
-        <DataGrid rows={classData.students} columns={columns} />
+        <DataGrid
+          rows={rowsstudentsByClass}
+          columns={columns}
+          getRowId={(row) => row._id}
+        />
       </Box>
     </Box>
   );

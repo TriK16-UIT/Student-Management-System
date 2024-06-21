@@ -24,26 +24,30 @@ const createClass = async (req, res) => {
 
     try {
         if (!/^[A-Z]\d{1,2}$/.test(name)) {
-            throw Error('Class name must match the pattern /^[A-Z]\\d{1,2}$/ (e.g., A1, B12).')
+            throw Error('Class name must match the pattern /^[A-Z]\\d{1,2}$/ (e.g., A1, B12).');
         }
 
-        if (![10, 11, 12].includes(gradeLevel)) {
-            throw Error('gradeLevel must be one of 10, 11, 12.');
+        // Validate the grade level
+        if (![10, 11, 12].includes(parseInt(gradeLevel, 10))) { // Ensure gradeLevel is an integer
+            throw Error('Grade level must be one of 10, 11, 12.');
         }
 
-        const new_class = await Class.create({ name: name, gradeLevel: gradeLevel })
+        // Create the new class
+        const new_class = await Class.create({ name: name, gradeLevel: parseInt(gradeLevel, 10) });
 
-        const classsubject = await createClassSubjects(new_class._id)
+        // Create related class subjects
+        const classsubject = await createClassSubjects(new_class._id);
 
         if (!classsubject.success) {
-            res.status(400).json({ error: classsubject.error })
+            return res.status(400).json({ error: classsubject.error });
         }
 
-        res.status(200).json(new_class)
+        res.status(200).json(new_class);
     } catch (error) {
         res.status(400).json({ error: error.message })
     }
 }
+
 
 const deleteClass = async (req, res) => {
     const {id} = req.params

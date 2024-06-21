@@ -1,73 +1,64 @@
 import React, { useState, useEffect } from 'react';
 import { Select, MenuItem, FormControl, InputLabel, Grid, Box } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
-import { mockDataBeta } from "../../data/mockData";
+
 import Header from '../../components/Header';
 import { useTheme } from '@emotion/react';
 import { tokens } from '../../theme';
+import { useAuthContext } from "../../context/AuthContext";
 
 const ReportSemester = () => {
-  const [selectedTerm, setSelectedTerm] = useState('');
-  const [rows, setRows] = useState([]);
-
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const { user } = useAuthContext();
+
+  const [termData, setTermData] = useState([]);
+  const [selectedTerm, setSelectedTerm] = useState("");
 
   useEffect(() => {
-    setRows(getFilteredGrades());
-  }, [selectedTerm]);
+    if (selectedTerm) {
+      const fetchClassData = async () => {
+        try {
+          const response = await fetch(`http://localhost:4000/api/report/term/${selectedTerm}`, {
+            headers: {
+              Authorization: `Bearer ${user.token}`,
+            },
+            method: "GET",
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to fetch class data");
+          }
+
+          const data = await response.json();
+          setTermData(data);
+        } catch (error) {
+          console.error("Error fetching class data:", error);
+        }
+      };
+
+      fetchClassData();
+    }
+  }, [selectedTerm, user]);
 
   const handleTermChange = (event) => {
     setSelectedTerm(event.target.value);
   };
 
-  const getFilteredGrades = () => {
-    if (!selectedTerm) {
-      return [];
-    }
-
-    // Filter grades by selected term
-    const filteredGrades = mockDataBeta.grades.filter(
-      (grade) => grade.Term === parseInt(selectedTerm, 10)
-    );
-
-    // Group grades by class
-    const classGroups = {};
-    filteredGrades.forEach((grade) => {
-      const student = mockDataBeta.students.find((s) => s.StudentID === grade.StudentID);
-      if (student) {
-        if (!classGroups[student.ClassID]) {
-          classGroups[student.ClassID] = {
-            className: mockDataBeta.classes.find((cls) => cls.ClassID === student.ClassID).Name,
-            classSize: 0,
-            numPass: 0
-          };
-        }
-        classGroups[student.ClassID].classSize += 1;
-        if (grade.ScoreAverage >= 5) {
-          classGroups[student.ClassID].numPass += 1;
-        }
-      }
-    });
-
-    // Format the result for the DataGrid
-    const classData = Object.entries(classGroups).map(([classID, data], index) => ({
-      id: index + 1,
-      className: data.className,
-      classSize: data.classSize,
-      numPass: data.numPass,
-      rate: ((data.numPass / data.classSize) * 100).toFixed(2) + '%'
-    }));
-
-    return classData;
-  };
+  const rows = termData.map((student, index) => ({
+    id: index + 1,
+    className: student.className,
+    totalStudents: student.totalStudents,
+    passingStudents: student.passingStudents,
+    passRate: student.passRate
+  }));
 
   const columns = [
     { field: 'id', headerName: 'ID', width: 90 },
     { field: 'className', headerName: 'Lớp', flex: 1 },
-    { field: 'classSize', headerName: 'Sỉ số', flex: 1 },
-    { field: 'numPass', headerName: 'Số lượng đạt', flex: 1 },
-    { field: 'rate', headerName: 'Tỉ lệ', width: 180 },
+    { field: 'totalStudents', headerName: 'Sỉ số', flex: 1 },
+    { field: 'passingStudents', headerName: 'Số lượng đạt', flex: 1 },
+    { field: 'passRate', headerName: 'Tỉ lệ', width: 180 },
   ];
 
   return (
@@ -76,10 +67,10 @@ const ReportSemester = () => {
       <Grid container spacing={3}>
         <Grid item xs={4}>
           <FormControl fullWidth>
-            <InputLabel>Term</InputLabel>
+            <InputLabel>Học Kỳ</InputLabel>
             <Select value={selectedTerm} onChange={handleTermChange}>
-              <MenuItem value={1}>1</MenuItem>
-              <MenuItem value={2}>2</MenuItem>
+              <MenuItem value={"I"}>1</MenuItem>
+              <MenuItem value={"II"}>2</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -112,7 +103,6 @@ const ReportSemester = () => {
           rows={rows}
           columns={columns}
           pageSize={5}
-          checkboxSelection
           disableSelectionOnClick
         />
       </Box>

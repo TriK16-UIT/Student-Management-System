@@ -74,24 +74,38 @@ const updateClassSubject = async (req, res) => {
         return res.status(400).json({ error: 'Changing this is not allowed' })
     }
 
-    if (TeacherID) {
-        const teacherExists = await Teacher.findOne({ _id: TeacherID }).select('SubjectID -_id')
+    if ('TeacherID' in req.body) {
+        if (TeacherID === "") {
+            const classsubject = await ClassSubject.findOneAndUpdate(
+                { _id: id },
+                { $unset: { TeacherID: "" } },
+                { new: true }
+            )
 
-        if (!teacherExists) {
-            return res.status(400).json({ error: 'No such teacher' })
+            return res.status(200).json(classsubject)
+        } else {
+            const teacherExists = await Teacher.findOne({ _id: TeacherID }).select('SubjectID -_id')
+
+            if (!teacherExists) {
+                return res.status(400).json({ error: 'No such teacher' })
+            }
+            
+            const classSubjectID = await ClassSubject.findById(id).select('SubjectID -_id')
+
+            if (!classSubjectID) {
+                return res.status(400).json({ error: 'ClassSubject not found' })
+            }
+
+            if (teacherExists.toString() !== classSubjectID.toString()) {
+                return res.status(400).json({ error: 'This teacher is not allowed to teach this subject!' })
+            }
+            
+            const classsubject = await ClassSubject.findOneAndUpdate({ _id: id }, {
+                ...req.body
+            }, { new: true })
+
+            return res.status(200).json(classsubject)
         }
-        
-        const classSubjectID = await ClassSubject.findById(id).select('SubjectID -_id')
-
-        if (teacherExists.toString() !== classSubjectID.toString()) {
-            return res.status(400).json({ error: 'This teacher is not allowed to teach this subject!' })
-        }
-        
-        const classsubject = await ClassSubject.findOneAndUpdate({ _id: id }, {
-            ...req.body
-        }, { new: true })
-
-        return res.status(200).json(classsubject)
     }
 }
 

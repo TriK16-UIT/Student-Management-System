@@ -94,7 +94,7 @@ const Sidebar = () => {
                 ml="15px"
               >
                 <Typography variant="h5" color={colors.grey[100]}>
-                  QUẢN LÝ SINH VIÊN
+                  QUẢN LÝ HỌC SINH
                 </Typography>
                 <IconButton onClick={() => setIsCollapsed(!isCollapsed)}>
                   <ChevronLeftIcon />

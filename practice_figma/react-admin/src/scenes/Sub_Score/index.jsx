@@ -1,27 +1,146 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Select, MenuItem, FormControl, InputLabel, Grid, Box, Button } from '@mui/material';
-import { DataGrid, GridCellModes } from '@mui/x-data-grid';
+import React, { useState, useEffect } from 'react';
+import { Select, MenuItem, FormControl, InputLabel, Grid, Box, Button, Dialog, DialogTitle, IconButton, DialogContent, Stack } from '@mui/material';
+import { DataGrid } from '@mui/x-data-grid';
 
-import { mockDataAlpha } from "../../data/mockData";
 import Header from '../../components/Header';
 import { useTheme } from '@emotion/react';
 import { tokens } from '../../theme';
-import EditToolbar from '../../components/EditToolbar';
+import { useAuthContext } from '../../context/AuthContext';
+import CloseIcon from "@mui/icons-material/Close";
+import EditIcon from "@mui/icons-material/Edit";
+import PatchGrade from './Edit_Grade';
+
 
 const SubScores = () => {
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
   const [selectedTerm, setSelectedTerm] = useState('');
   const [rows, setRows] = useState([]);
-  const [selectedCellParams, setSelectedCellParams] = useState(null);
-  const [cellModesModel, setCellModesModel] = useState({});
-
+  const [subjects, setSubjects] = useState([]);
+  const [classes, setClasses] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [selectedStudentId, setSelectedStudentId] = useState(null);
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const { user } = useAuthContext();
+  const [dialogState, setDialogState] = useState(null);
+  const [open, setOpen] = useState(false);
+
+  const handleOpen = (state, id = null) => {
+    setDialogState(state);
+    setSelectedStudentId(id);
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setSelectedStudentId(null);
+    setDialogState(null);
+  };
 
   useEffect(() => {
-    setRows(getFilteredGrades());
+    fetchSubjects();
+    fetchClasses();
+    fetchStudents();
+  }, []);
+
+  useEffect(() => {
+    if (selectedClass && selectedSubject && selectedTerm) {
+      fetchGrades();
+    }
   }, [selectedClass, selectedSubject, selectedTerm]);
+
+  const fetchSubjects = async () => {
+    try {
+      const response = await fetch('http://localhost:4000/api/subject', {
+        headers: { Authorization: `Bearer ${user.token}` },
+        method: "GET",
+      });
+      if (!response.ok) throw new Error('Failed to fetch subjects');
+      const data = await response.json();
+      setSubjects(data);
+    } catch (error) {
+      console.error('Error fetching subjects:', error);
+    }
+  };
+
+  const fetchClasses = async () => {
+    try {
+      const response = await fetch('http://localhost:4000/api/class/', {
+        headers: { Authorization: `Bearer ${user.token}` },
+        method: "GET",
+      });
+      if (!response.ok) throw new Error('Failed to fetch classes');
+      const data = await response.json();
+      setClasses(data);
+    } catch (error) {
+      console.error('Error fetching classes:', error);
+    }
+  };
+
+  const fetchStudents = async () => {
+    try {
+      const response = await fetch('http://localhost:4000/api/student', {
+        headers: { Authorization: `Bearer ${user.token}` },
+        method: "GET",
+      });
+      if (!response.ok) throw new Error('Failed to fetch students');
+      const data = await response.json();
+      setStudents(data);
+    } catch (error) {
+      console.error('Error fetching students:', error);
+    }
+  };
+
+  const formatSubjectName = (name) => {
+    switch (name.toLowerCase()) {
+      case 'math':
+        return 'Toán';
+      case 'physics':
+        return 'Vật lý';
+      case 'chemistry':
+        return 'Hóa học';
+      case 'biology':
+        return 'Sinh học';
+      case 'history':
+        return 'Lịch sử';
+      case 'geography':
+        return 'Địa lý';
+      case 'literature':
+        return 'Ngữ văn';
+      case 'ethics':
+        return 'Đạo đức';
+      case 'pe':
+        return 'Thể dục';
+      default:
+        return name;
+    }
+  };
+
+  const fetchGrades = async () => {
+    try {
+      const response = await fetch(`http://localhost:4000/api/grade/class/${selectedClass}/subject/${selectedSubject}/term/${selectedTerm}`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+        method: "GET",
+      });
+      if (!response.ok) throw new Error('Failed to fetch grades');
+      const data = await response.json();
+      setRows(mapRows(data));
+    } catch (error) {
+      console.error('Error fetching grades:', error);
+    }
+  };
+
+  const mapRows = (data) => {
+    return data.map((student, index) => ({
+      id: index + 1,
+      _id: student._id,
+      studentName: getStudentNameByStudentId(student.StudentID),
+      score15Min: student.score15Min,
+      score45Min: student.score45Min,
+      scoreAverage: student.scoreAverage,
+    }));
+  };
 
   const handleClassChange = (event) => {
     setSelectedClass(event.target.value);
@@ -35,133 +154,82 @@ const SubScores = () => {
     setSelectedTerm(event.target.value);
   };
 
-  const getFilteredGrades = () => {
-    if (!selectedClass || !selectedSubject || !selectedTerm) {
-      return [];
-    }
-    return mockDataAlpha.grades
-      .filter(
-        (grade) =>
-          mockDataAlpha.students.find(
-            (student) => student.StudentID === grade.StudentID && student.ClassID === selectedClass
-          ) && grade.SubjectID === selectedSubject && grade.Term === parseInt(selectedTerm, 10)
-      )
-      .map((grade, index) => ({
-        id: index + 1,
-        studentName: getStudentName(grade.StudentID),
-        score15Min: grade.Score15Min,
-        score45Min: grade.Score45Min,
-        scoreAverage: ((grade.Score15Min + 2 * grade.Score45Min) / 3).toFixed(2),
-      }));
-  };
-
-  const getStudentName = (studentID) => {
-    const student = mockDataAlpha.students.find((student) => student.StudentID === studentID);
-    return student ? `${student.FirstName} ${student.LastName}` : '';
-  };
-
-  const handleCellEditCommit = (params) => {
-    const updatedRows = rows.map((row) => {
-      if (row.id === params.id) {
-        row[params.field] = params.value;
-        row.scoreAverage = (
-          (parseFloat(row.score15Min) + 2 * parseFloat(row.score45Min)) /
-          3
-        ).toFixed(2);
-      }
-      return row;
-    });
-    setRows(updatedRows);
-  };
-
-  const handleCellFocus = useCallback((event) => {
-    const row = event.currentTarget.parentElement;
-    const id = row.dataset.id;
-    const field = event.currentTarget.dataset.field;
-    if (field === 'score15Min' || field === 'score45Min') {
-      setSelectedCellParams({ id, field });
-    }
-  }, []);
-
-  const cellMode = useMemo(() => {
-    if (!selectedCellParams) {
-      return 'view';
-    }
-    const { id, field } = selectedCellParams;
-    return cellModesModel[id]?.[field]?.mode || 'view';
-  }, [cellModesModel, selectedCellParams]);
-
-  const handleCellKeyDown = useCallback(
-    (params, event) => {
-      if (event.key === 'Enter' && cellMode === 'edit') {
-        setCellModesModel((prev) => ({
-          ...prev,
-          [params.id]: {
-            ...prev[params.id],
-            [params.field]: { mode: GridCellModes.View },
-          },
-        }));
-        handleCellEditCommit(params);
-      }
-    },
-    [cellMode]
-  );
-
-  const handleCellEditStop = useCallback((params, event) => {
-    event.defaultMuiPrevented = true;
-  }, []);
-
-  const handleSaveOrEdit = () => {
-    if (!selectedCellParams) {
-      return;
-    }
-    const { id, field } = selectedCellParams;
-    if (cellMode === 'edit') {
-      setCellModesModel({
-        ...cellModesModel,
-        [id]: { ...cellModesModel[id], [field]: { mode: GridCellModes.View } },
-      });
-    } else {
-      setCellModesModel({
-        ...cellModesModel,
-        [id]: { ...cellModesModel[id], [field]: { mode: GridCellModes.Edit } },
-      });
-    }
-  };
-
-  const handleCancel = () => {
-    if (!selectedCellParams) {
-      return;
-    }
-    const { id, field } = selectedCellParams;
-    setCellModesModel({
-      ...cellModesModel,
-      [id]: {
-        ...cellModesModel[id],
-        [field]: { mode: GridCellModes.View, ignoreModifications: true },
-      },
-    });
+  const getStudentNameByStudentId = (studentId) => {
+    const student = students.find(s => s._id === studentId);
+    return student ? student.firstName + " " + student.lastName : '';
   };
 
   const columns = [
-    { field: 'id', headerName: 'ID', width: 90, editable: false },
-    { field: 'studentName', headerName: 'Student Name', flex: 1, editable: false },
-    { field: 'score15Min', headerName: 'Score 15 Min', flex: 1, editable: true },
-    { field: 'score45Min', headerName: 'Score 45 Min', flex: 1, editable: true },
-    { field: 'scoreAverage', headerName: 'Score Average', width: 180, editable: false },
+    { field: 'id', headerName: 'ID', width: 90 },
+    { field: 'studentName', headerName: 'Học sinh', flex: 1, minWidth: 150 },
+    { field: 'score15Min', headerName: 'Điểm 15 phút', width: 150 },
+    { field: 'score45Min', headerName: 'Điểm 45 phút', width: 150 },
+    { field: 'scoreAverage', headerName: 'Điểm trung bình', width: 180 },
+    {
+      field: 'actions',
+      headerName: "Hành động",
+      flex: 1,
+      renderCell: (params) => (
+        <Box
+          width="60%"
+          m="0 auto"
+          p="5px"
+          display="flex"
+          justifyContent="center"
+          borderRadius="4px"
+        >
+          <Button
+            type="button"
+            color="primary"
+            variant="contained"
+            endIcon={<EditIcon />}
+            onClick={() => handleOpen("edit", params.row._id)}
+            sx={{
+              marginLeft: 1,
+              backgroundColor: '#4CCEAC',
+              '&:hover': {
+                backgroundColor: '#36917A',
+              }
+            }}
+          >
+            Chỉnh sửa
+          </Button>
+        </Box>
+      ),
+    },
   ];
 
   return (
     <Box m="20px" mb="20px">
-      <Header title="Nhập bảng điểm môn" subtitle="blah..blah.." />
+      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
+        <DialogTitle
+          sx={{
+            backgroundColor: colors.purpleAccent[500],
+          }}
+        >
+          <IconButton onClick={handleClose} style={{ float: "right" }}>
+            <CloseIcon style={{ color: colors.primary[500] }} />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent
+          sx={{
+            backgroundColor: colors.grey[700],
+          }}
+        >
+          <Stack spacing={2} margin={2}>
+            <PatchGrade studentId={selectedStudentId} />
+          </Stack>
+        </DialogContent>
+      </Dialog>
+      <Header title="Nhập bảng điểm môn" subtitle="" />
       <Grid container spacing={3}>
         <Grid item xs={4}>
           <FormControl fullWidth>
-            <InputLabel>Class</InputLabel>
+            <InputLabel>Lớp</InputLabel>
             <Select value={selectedClass} onChange={handleClassChange}>
-              {mockDataAlpha.classes.map((cls) => (
-                <MenuItem key={cls.ClassID} value={cls.ClassID}>
-                  {cls.Name}
+              {classes.map((cls) => (
+                <MenuItem key={cls._id} value={cls._id}>
+                  {cls.name}
                 </MenuItem>
               ))}
             </Select>
@@ -169,11 +237,11 @@ const SubScores = () => {
         </Grid>
         <Grid item xs={4}>
           <FormControl fullWidth>
-            <InputLabel>Subject</InputLabel>
+            <InputLabel>Môn học</InputLabel>
             <Select value={selectedSubject} onChange={handleSubjectChange}>
-              {mockDataAlpha.subjects.map((subject) => (
-                <MenuItem key={subject.SubjectID} value={subject.SubjectID}>
-                  {subject.Name}
+              {subjects.map((subject) => (
+                <MenuItem key={subject._id} value={subject._id}>
+                  {formatSubjectName(subject.name)}
                 </MenuItem>
               ))}
             </Select>
@@ -181,10 +249,10 @@ const SubScores = () => {
         </Grid>
         <Grid item xs={4}>
           <FormControl fullWidth>
-            <InputLabel>Term</InputLabel>
+            <InputLabel>Học Kỳ</InputLabel>
             <Select value={selectedTerm} onChange={handleTermChange}>
-              <MenuItem value={1}>1</MenuItem>
-              <MenuItem value={2}>2</MenuItem>
+              <MenuItem value={"I"}>1</MenuItem>
+              <MenuItem value={"II"}>2</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -220,29 +288,7 @@ const SubScores = () => {
           rows={rows}
           columns={columns}
           pageSize={5}
-          checkboxSelection
           disableSelectionOnClick
-          onCellEditCommit={handleCellEditCommit}
-          onCellKeyDown={handleCellKeyDown}
-          cellModesModel={cellModesModel}
-          onCellEditStop={handleCellEditStop}
-          onCellModesModelChange={(model) => setCellModesModel(model)}
-          isCellEditable={(params) => params.field === 'score15Min' || params.field === 'score45Min'}
-          slots={{
-            toolbar: EditToolbar,
-          }}
-          slotProps={{
-            toolbar: {
-              cellMode,
-              selectedCellParams,
-              setSelectedCellParams,
-              cellModesModel,
-              setCellModesModel,
-            },
-            cell: {
-              onFocus: handleCellFocus,
-            },
-          }}
         />
       </Box>
     </Box>

@@ -37,7 +37,6 @@ app.use(cors({
 //     res.json({mssg: 'Welcome to the app'})
 // })
 
-
 app.use('/api/user', userRoutes)
 app.use('/api/teacher', teacherRoutes)
 app.use('/api/class', classRouters)
