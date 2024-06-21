@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { GradesContext } from "../context/GradeContext";
+import { GradesContext } from "../context/GradeContext"
 
 export const useGradesContext = () => {
   const context = useContext(GradesContext);

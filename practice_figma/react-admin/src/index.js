@@ -8,6 +8,7 @@ import { StudentInfsContextProvider } from './context/StudentContext';
 import { ClassContextProvider } from './context/ClassContext';
 import { ClassMemberProvider } from './context/ClassMemberContext';
 import { GradesContextProvider } from './context/GradeContext';
+import { ConfigContextProvider } from './context/ConfigContext';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -17,9 +18,11 @@ root.render(
     <ClassContextProvider>
       <ClassMemberProvider>
         <GradesContextProvider>
+          <ConfigContextProvider>
       <BrowserRouter>
         <App />
       </BrowserRouter>
+      </ConfigContextProvider>
       </GradesContextProvider>
       </ClassMemberProvider>
       </ClassContextProvider>

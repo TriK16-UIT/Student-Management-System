@@ -17,6 +17,7 @@ import LoginPage from "./scenes/Login";
 import UserManage from "./scenes/User_Management";
 import { useAuthContext } from "./hooks/useAuthContext";
 import ReportSubject from "./scenes/Out_Report/ReportSubject";
+import SettingPage from "./scenes/Setting";
 
 function App() {
   const [theme, colorMode] = useMode();
@@ -47,6 +48,7 @@ function App() {
               <Route path="/summary_report/subject" element={user ?<ReportSubject /> : <Navigate to="/login" />} />
               <Route path="/summary_report/semester" element={user ? <ReportSemester /> : <Navigate to="/login" />} />
               <Route path="/users_management" element={user ? <UserManage /> : <Navigate to="/login" />} />
+              <Route path="/settings" element={user ? <SettingPage /> : <Navigate to="/login" />} />
               <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/" />} />
             </Routes>
           </main>

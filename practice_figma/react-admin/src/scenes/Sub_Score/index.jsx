@@ -7,15 +7,14 @@ import { useTheme } from '@emotion/react';
 import { tokens } from '../../theme';
 import { useAuthContext } from '../../context/AuthContext';
 import CloseIcon from "@mui/icons-material/Close";
-import EditIcon from "@mui/icons-material/Edit";
+import EditIcon from '@mui/icons-material/Edit';
 import PatchGrade from './Edit_Grade';
-
+import { useGradesContext } from '../../hooks/useGradeContext';
 
 const SubScores = () => {
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
   const [selectedTerm, setSelectedTerm] = useState('');
-  const [rows, setRows] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [classes, setClasses] = useState([]);
   const [students, setStudents] = useState([]);
@@ -25,6 +24,8 @@ const SubScores = () => {
   const { user } = useAuthContext();
   const [dialogState, setDialogState] = useState(null);
   const [open, setOpen] = useState(false);
+
+  const { grades, dispatch } = useGradesContext();
 
   const handleOpen = (state, id = null) => {
     setDialogState(state);
@@ -117,29 +118,26 @@ const SubScores = () => {
     }
   };
 
+  const formatScore = (score) => {
+    return score.toFixed(2);
+  };
+
   const fetchGrades = async () => {
     try {
+      if (!selectedClass || !selectedSubject || !selectedTerm) {
+        console.warn('Please select all fields');
+        return;
+      }
       const response = await fetch(`http://localhost:4000/api/grade/class/${selectedClass}/subject/${selectedSubject}/term/${selectedTerm}`, {
         headers: { Authorization: `Bearer ${user.token}` },
         method: "GET",
       });
       if (!response.ok) throw new Error('Failed to fetch grades');
       const data = await response.json();
-      setRows(mapRows(data));
+      dispatch({ type: 'SET_GRADES', payload: data });
     } catch (error) {
       console.error('Error fetching grades:', error);
     }
-  };
-
-  const mapRows = (data) => {
-    return data.map((student, index) => ({
-      id: index + 1,
-      _id: student._id,
-      studentName: getStudentNameByStudentId(student.StudentID),
-      score15Min: student.score15Min,
-      score45Min: student.score45Min,
-      scoreAverage: student.scoreAverage,
-    }));
   };
 
   const handleClassChange = (event) => {
@@ -198,6 +196,15 @@ const SubScores = () => {
       ),
     },
   ];
+
+  const rows = grades ? grades.map((student, index) => ({
+    id: index + 1,
+    _id: student._id,
+    studentName: getStudentNameByStudentId(student.StudentID),
+    score15Min: student.score15Min,
+    score45Min: student.score45Min,
+    scoreAverage: formatScore(student.scoreAverage),
+  })) : [];
 
   return (
     <Box m="20px" mb="20px">
@@ -258,39 +265,45 @@ const SubScores = () => {
         </Grid>
       </Grid>
 
-      <Box
-        m="40px 0 0 0"
-        height="75vh"
-        sx={{
-          '& .MuiDataGrid-root': {
-            border: 'none',
-          },
-          '& .MuiDataGrid-cell': {
-            borderBottom: 'none',
-          },
-          '& .name-column--cell': {
-            // color: colors.redAccent[300],
-          },
-          '& .MuiDataGrid-columnHeader': {
-            backgroundColor: colors.purpleAccent[500],
-            borderBottom: 'none',
-          },
-          '& .MuiDataGrid-virtualScroller': {
-            backgroundColor: colors.primary[400],
-          },
-          '& .MuiDataGrid-footerContainer': {
-            borderTop: 'none',
-            backgroundColor: colors.purpleAccent[500],
-          },
-        }}
-      >
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          pageSize={5}
-          disableSelectionOnClick
-        />
-      </Box>
+      {selectedClass && selectedSubject && selectedTerm ? (
+        <Box
+          m="40px 0 0 0"
+          height="75vh"
+          sx={{
+            '& .MuiDataGrid-root': {
+              border: 'none',
+            },
+            '& .MuiDataGrid-cell': {
+              borderBottom: 'none',
+            },
+            '& .name-column--cell': {
+              // color: colors.redAccent[300],
+            },
+            '& .MuiDataGrid-columnHeader': {
+              backgroundColor: colors.purpleAccent[500],
+              borderBottom: 'none',
+            },
+            '& .MuiDataGrid-virtualScroller': {
+              backgroundColor: colors.primary[400],
+            },
+            '& .MuiDataGrid-footerContainer': {
+              borderTop: 'none',
+              backgroundColor: colors.purpleAccent[500],
+            },
+          }}
+        >
+          <DataGrid
+            rows={rows}
+            columns={columns}
+            pageSize={5}
+            disableSelectionOnClick
+          />
+        </Box>
+      ) : (
+        <Box mt="20px">
+          <p>Vui lòng chọn đầy đủ Lớp, Môn học và Học Kỳ để hiển thị bảng điểm.</p>
+        </Box>
+      )}
     </Box>
   );
 };

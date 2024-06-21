@@ -19,8 +19,10 @@ const PatchGrade = ({ studentId }) => {
   const { dispatch } = useGradesContext();
 
   useEffect(() => {
+    if(studentId === null ) return
+    dispatch({ type: 'START_EDITING', payload: studentId });
+
     const fetchGrade = async () => {
-      try {
         const response = await fetch(`http://localhost:4000/api/grade/${studentId}`, {
           headers: {
             Authorization: `Bearer ${user.token}`,
@@ -34,10 +36,7 @@ const PatchGrade = ({ studentId }) => {
         console.log("Fetched grade:", json);
         setStudentData(json);
         setLoading(false);
-      } catch (error) {
-        console.error("Error fetching grade information:", error);
-        setLoading(false);
-      }
+        dispatch({ type: "GET_GRADE", payload: json });
     };
 
     fetchGrade();
@@ -50,8 +49,6 @@ const PatchGrade = ({ studentId }) => {
     }
 
     console.log("Submitting values:", values);
-
-    try {
       const response = await fetch(`http://localhost:4000/api/grade/${studentId}`, {
         method: "PATCH",
         headers: {
@@ -67,9 +64,7 @@ const PatchGrade = ({ studentId }) => {
         const errorData = await response.json();
         console.error("Failed to update grade information", errorData);
       }
-    } catch (error) {
-      console.error("Error updating grade information:", error);
-    }
+   
   };
 
   const initialValues = studentData
@@ -86,6 +81,12 @@ const PatchGrade = ({ studentId }) => {
     score15Min: yup.number().required("Vui lòng nhập điểm 15 phút"),
     score45Min: yup.number().required("Vui lòng nhập điểm 45 phút"),
   });
+  const handleEditChange = (e) => {
+    dispatch({
+      type: 'UPDATE_FORM',
+      payload: { [e.target.name]: e.target.value }
+    });
+  };
 
   if (loading) {
     return <p>Loading...</p>;
@@ -124,7 +125,10 @@ const PatchGrade = ({ studentId }) => {
                 type="number"
                 label="Điểm 15 phút"
                 onBlur={handleBlur}
-                onChange={handleChange}
+                onChange={(e) => {
+                  handleChange(e);
+                  handleEditChange(e);
+                }}
                 value={values.score15Min}
                 name="score15Min"
                 error={!!touched.score15Min && !!errors.score15Min}
@@ -138,7 +142,10 @@ const PatchGrade = ({ studentId }) => {
                 type="number"
                 label="Điểm 45 phút"
                 onBlur={handleBlur}
-                onChange={handleChange}
+                onChange={(e) => {
+                  handleChange(e);
+                  handleEditChange(e);
+                }}
                 value={values.score45Min}
                 name="score45Min"
                 error={!!touched.score45Min && !!errors.score45Min}

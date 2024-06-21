@@ -48,7 +48,6 @@ const createClass = async (req, res) => {
     }
 }
 
-
 const deleteClass = async (req, res) => {
     const {id} = req.params
 
