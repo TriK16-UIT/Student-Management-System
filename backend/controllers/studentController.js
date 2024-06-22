@@ -86,6 +86,10 @@ const deleteStudent = async (req, res) => {
         return res.status(400).json({ error: 'No such student' })
     }
 
+    if (student.ClassID) {
+        await Class.findByIdAndUpdate(student.ClassID, { $inc: { numofStudents: -1 } })
+    }
+
     const result = await deleteGradesByStudentID(student._id);
 
     if (!result.success) {
