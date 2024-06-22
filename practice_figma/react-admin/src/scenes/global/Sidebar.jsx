@@ -56,6 +56,19 @@ const Sidebar = () => {
     logout();
   };
 
+  const isTeacher = user && user.role === 'teacher';
+
+  const formatRole = (name) => {
+    switch (name) {
+      case 'teacher':
+        return 'Giáo viên';
+      case 'admin':
+      return 'Ban quản lý';
+      default:
+        return name;
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -116,7 +129,7 @@ const Sidebar = () => {
                         {user.username}
                       </Typography>
                       <Typography variant="h5" color={colors.purpleAccent[500]}>
-                        Role
+                        {formatRole(user.role)}
                       </Typography>
                     </>
                   )}
@@ -131,6 +144,7 @@ const Sidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
+            {!isTeacher && (
             <Item
               title="Người dùng"
               to="/users_management"
@@ -138,6 +152,8 @@ const Sidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
+            )}
+            {!isTeacher && (
             <Item
               title="Tiếp nhận học sinh"
               to="/student_admission"
@@ -145,6 +161,7 @@ const Sidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
+            )}
             <Item
               title="Lập danh sách lớp"
               to="/class_list"
@@ -178,6 +195,7 @@ const Sidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
+            {!isTeacher && (
             <Item
               title="Cài đặt"
               to="/settings"
@@ -185,6 +203,7 @@ const Sidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
+            )}
             <Typography
               variant="h6"
               color={colors.grey[300]}

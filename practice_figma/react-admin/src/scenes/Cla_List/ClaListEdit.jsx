@@ -21,6 +21,9 @@ const ClaListEdit = () => {
   const { user } = useAuthContext();
   const { classMembers, dispatch } = useClassMemberContext();
 
+  const [addingToClass, setAddingToClass] = useState(false);
+  const [addToClassError, setAddToClassError] = useState(null);
+
   useEffect(() => {
     const fetchClassData = async () => {
       try {
@@ -102,32 +105,42 @@ const ClaListEdit = () => {
     console.log(arrIds); // Use the new selection model
     const selectedStudents = studentsWithoutClass.filter(student => arrIds.includes(student._id));
 
-    const promises = selectedStudents.map(async (student) => {
-      const response = await fetch(`http://localhost:4000/api/student/${student._id}`, {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-          "Content-Type": "application/json",
-        },
-        method: "PATCH",
-        body: JSON.stringify({
-          ClassID: id
-        }),
-      });
+    try {
+        // Disable the button and clear any previous errors
+        setAddingToClass(true);
+        setAddToClassError(null);
 
-      if (!response.ok) {
-        throw new Error(`Failed to update student ${student._id}`);
-      }
-      const patchedStudent = await response.json();
-      return patchedStudent;
-    });
+        for (let i = 0; i < selectedStudents.length; i++) {
+            const student = selectedStudents[i];
+            const response = await fetch(`http://localhost:4000/api/student/${student._id}`, {
+                headers: {
+                    Authorization: `Bearer ${user.token}`,
+                    "Content-Type": "application/json",
+                },
+                method: "PATCH",
+                body: JSON.stringify({
+                    ClassID: id
+                }),
+            });
 
-    const results = await Promise.all(promises);
-    console.log("Updated students:", results);
+            if (!response.ok) {
+                throw new Error(`Failed to update student ${student._id}`);
+            }
 
-    dispatch({ type: "ADD_CLASS_MEMBERS", payload: results });
-    fetchStudentsWithoutClass();
-    handleClose(); // Close the dialog
-  };
+            const patchedStudent = await response.json();
+            dispatch({ type: "ADD_CLASS_MEMBER", payload: patchedStudent });
+        }
+
+        fetchStudentsWithoutClass();
+        handleClose(); // Close the dialog
+    } catch (error) {
+        console.error("Error adding students to class:", error);
+        setAddToClassError(error.message || "Failed to add students to class.");
+    } finally {
+        setAddingToClass(false); // Re-enable the button
+    }
+};
+
 
   const columns_students = [
     { field: "id", headerName: "STT", width: 90 },
@@ -258,7 +271,7 @@ const ClaListEdit = () => {
               onClick={handleAddToClass}
               disabled={studentsWithoutClass.length === 0}
             >
-              Thêm sinh viên vào lớp
+              Thêm học sinh vào lớp
             </Button>
           </Stack>
         </DialogContent>
@@ -300,7 +313,7 @@ const ClaListEdit = () => {
           color="secondary"
           onClick={handleOpen}
         >
-          Thêm sinh viên
+          Thêm học sinh
         </Button>
       </Box>
 

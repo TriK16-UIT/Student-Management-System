@@ -9,25 +9,30 @@ const DeleteStudentID = ({ params }) => {
     const { row } = params;
 
     const handleDeleteClick = async () => {
-        if (!user) {
-            return;
-        }
+        try {
+            if (!user) {
+                console.error("User not authenticated");
+                return;
+            }
 
-        const response = await fetch(`http://localhost:4000/api/student/${row._id}`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${user.token}`
-            },
-            body: JSON.stringify({ ClassID: "" }) // Sending body to update ClassID
-        });
+            const response = await fetch(`http://localhost:4000/api/student/${row._id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user.token}`
+                },
+                body: JSON.stringify({ "ClassID": "" }) // Sending body to update ClassID
+            });
 
-        const json = await response.json();
+            const json = await response.json();
 
-        if (response.ok) {
-            dispatch({ type: 'DELETE_CLASS_MEMBER', payload: json });
-        } else {
-            console.error("Failed to update student:", json.error);
+            if (response.ok) {
+                dispatch({ type: 'DELETE_CLASS_MEMBER', payload: json });
+            } else {
+                console.error("Failed to update student:", json.error);
+            }
+        } catch (error) {
+            console.error("Error deleting student:", error);
         }
     };
 

@@ -188,34 +188,34 @@ const StuAdmission = () => {
     XLSX.writeFile(workbook, "students.xlsx");
   };
 
-  const importFromExcel = (event) => {
-    const file = event.target.files[0];
-    const reader = new FileReader();
+  // const importFromExcel = (event) => {
+  //   const file = event.target.files[0];
+  //   const reader = new FileReader();
 
-    reader.onload = (e) => {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+  //   reader.onload = (e) => {
+  //     const data = new Uint8Array(e.target.result);
+  //     const workbook = XLSX.read(data, { type: 'array' });
+  //     const sheetName = workbook.SheetNames[0];
+  //     const worksheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
-      console.log('Data read from Excel:', worksheet);
+  //     console.log('Data read from Excel:', worksheet);
 
-      worksheet.forEach(async (row) => {
-        const {
-          'Họ': lastName,
-          'Tên': firstName,
-          'Ngày sinh': dateOfBirth,
-          'Địa chỉ': address,
-          'Email': email,
-          'Giới tính': gender
-        } = row;
-        await signup(firstName, lastName, dateOfBirth, address, email, gender);
-        console.log(error);
-      });
-    };
+  //     worksheet.forEach(async (row) => {
+  //       const {
+  //         'Họ': lastName,
+  //         'Tên': firstName,
+  //         'Ngày sinh': dateOfBirth,
+  //         'Địa chỉ': address,
+  //         'Email': email,
+  //         'Giới tính': gender
+  //       } = row;
+  //       await signup(firstName, lastName, dateOfBirth, address, email, gender);
+  //       console.log(error);
+  //     });
+  //   };
 
-    reader.readAsArrayBuffer(file);
-  };
+  //   reader.readAsArrayBuffer(file);
+  // };
 
   return (
     <Box m="20px" mb="20px">
@@ -252,7 +252,7 @@ const StuAdmission = () => {
         </Button>
 
         <Box display="flex" gap="10px">
-          <input
+          {/* <input
             type="file"
             accept=".xlsx, .xls"
             style={{ display: "none" }}
@@ -263,7 +263,7 @@ const StuAdmission = () => {
             <Button variant="contained" color="secondary" component="span">
               Nhập dữ liệu từ excel
             </Button>
-          </label>
+          </label> */}
           <Button variant="contained" color="secondary" onClick={exportToExcel}>
             Xuất file excel
           </Button>

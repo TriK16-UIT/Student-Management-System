@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Select, MenuItem, FormControl, InputLabel, Grid, Box } from '@mui/material';
+import { Select, MenuItem, FormControl, InputLabel, Grid, Box, Button } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
+import * as XLSX from 'xlsx';
 
 import Header from '../../components/Header';
 import { useTheme } from '@emotion/react';
@@ -60,10 +61,26 @@ const ReportSemester = () => {
     { field: 'passingStudents', headerName: 'Số lượng đạt', flex: 1 },
     { field: 'passRate', headerName: 'Tỉ lệ', width: 180 },
   ];
+  
+  const exportToExcel = () => {
+    const dataToExport = termData.map((student, index) => ({
+      STT: index + 1,
+      "Lớp": student.className,
+      "Số lượng học sinh": student.totalStudents,
+      "Số lượng đạt": student.passingStudents,
+      "Tỷ lệ đạt": student.passRate
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Term Data");
+    XLSX.writeFile(workbook, `Term_${selectedTerm}_Data.xlsx`);
+  };
 
   return (
     <Box m="20px" mb="20px">
-      <Header title="Lập bảng tổng kết" subtitle="Học kỳ" />
+      <Header title="Lập bảng tổng kết " subtitle="Học kỳ" />
+      <Box display="flex" justifyContent="space-between" mb="20px">
       <Grid container spacing={3}>
         <Grid item xs={4}>
           <FormControl fullWidth>
@@ -74,8 +91,13 @@ const ReportSemester = () => {
             </Select>
           </FormControl>
         </Grid>
+        <Grid item xs={4}>
+        <Button variant="contained" color="secondary" onClick={exportToExcel}>
+              Xuất file excel
+        </Button>
+        </Grid>
       </Grid>
-
+      </Box>
       <Box
         m="40px 0 0 0"
         height="75vh"

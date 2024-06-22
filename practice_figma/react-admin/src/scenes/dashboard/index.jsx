@@ -1,4 +1,4 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, CircularProgress, Alert } from "@mui/material";
 import Header from "../../components/Header";
 import { useTheme } from "@emotion/react";
 import { tokens } from "../../theme";
@@ -20,9 +20,14 @@ const Dashboard = () => {
   const [classCount, setClassCount] = useState(0);
   const [termData1, setTermData1] = useState({ passRate: 0, passingStudents: 0 });
   const [termData2, setTermData2] = useState({ passRate: 0, passingStudents: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+
       if (user && user.token) {
         try {
           const [userResponse, studentResponse, classResponse] = await Promise.all([
@@ -60,7 +65,9 @@ const Dashboard = () => {
           setTeacherCount(teachers.length);
           setClassCount(classes.length);
         } catch (error) {
-          console.error("Error fetching data:", error);
+          setError("Error fetching data: " + error.message);
+        } finally {
+          setLoading(false);
         }
       }
     };
@@ -70,57 +77,74 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchTermData = async (term) => {
-      try {
         const response = await fetch(`http://localhost:4000/api/report/term/${term}`, {
           headers: {
             Authorization: `Bearer ${user.token}`,
           },
           method: "GET",
         });
-
+    
         if (!response.ok) {
           throw new Error("Failed to fetch term data");
         }
-
-        return response.json();
-      } catch (error) {
-        console.error("Error fetching term data:", error);
-        return { passRate: [], passingStudents: [] };
-      }
+    
+        const data = await response.json();
+        return data;
     };
 
     const fetchAllTermData = async () => {
       if (user) {
-        const [data1, data2] = await Promise.all([fetchTermData("I"), fetchTermData("II")]);
+        try {
+          const [data1, data2] = await Promise.all([fetchTermData("I"), fetchTermData("II")]);
 
-        console.log(data1)
-        console.log(data2)
-        const averagePassRate1 = data1.passRate?.reduce((a, b) => a + b, 0) / (data1.passRate?.length || 1);
-        const averagePassRate2 = data2.passRate?.reduce((a, b) => a + b, 0) / (data2.passRate?.length || 1);
+          const totalPassingStudents1 = data1.reduce((sum, obj) => sum + (obj.passingStudents || 0), 0);
+          const averagePassingStudents1 = totalPassingStudents1 / data1.length;
+          const totalPassRate1 = data1.reduce((sum, obj) => sum + (parseFloat(obj.passRate) || 0), 0);
+          const averagePassRate1 = totalPassRate1 / data1.length;
+          
+          const totalPassingStudents2 = data2.reduce((sum, obj) => sum + (obj.passingStudents || 0), 0);
+          const averagePassingStudents2 = totalPassingStudents2 / data2.length;
+          const totalPassRate2 = data2.reduce((sum, obj) => sum + (parseFloat(obj.passRate) || 0), 0);
+          const averagePassRate2 = totalPassRate2 / data2.length;
 
-        const averagePassingStudents1 = data1.passingStudents?.reduce((a, b) => a + b, 0) / (data1.passingStudents?.length || 1);
-        const averagePassingStudents2 = data2.passingStudents?.reduce((a, b) => a + b, 0) / (data2.passingStudents?.length || 1);
-        
-        console.log("pass av", averagePassingStudents1)
-        setTermData1({
-          passRate: averagePassRate1 / 10,
-          passingStudents: averagePassingStudents1
-        });
-        setTermData2({
-          passRate: averagePassRate2 / 10,
-          passingStudents: averagePassingStudents2
-        });
+          console.log(averagePassRate1)
+          console.log(averagePassRate2)
+          
+          setTermData1({
+            passRate: averagePassRate1 / 100,
+            passingStudents: totalPassingStudents1
+          });
+  
+          setTermData2({
+            passRate: averagePassRate2 / 100,
+            passingStudents: totalPassingStudents2
+          });
+          } catch (error) {
+            setError("Error fetching term data: " + error.message);
+          }
       }
     };
-
+  
     fetchAllTermData();
   }, [user]);
+
+  if (loading) {
+    return <CircularProgress />;
+  }
+
+  if (error) {
+    return <Alert severity="error">{error}</Alert>;
+  }
+
+  const formatScore = (score) => {
+    return score.toFixed(2);
+  };
 
   return (
     <Box m="20px">
       {/* HEADER */}
       <Box display="flex" justifyContent="space-between" alignItems="center">
-        <Header title="DASHBOARD" subtitle="Welcome to your dashboard" />
+        <Header title="Trang chủ" subtitle="Welcome to your dashboard" />
       </Box>
 
       <Box
@@ -198,15 +222,15 @@ const Dashboard = () => {
             alignItems="center"
             mt="25px"
           >
-            <ProgressCircle size="125" progress={termData1.passRate || 1} increase="+14%"/>
+            <ProgressCircle size="125" progress={formatScore(termData1.passRate)}  increase={`${formatScore(termData1.passRate)}%`}/>
             <Typography
               variant="h5"
               color={colors.purpleAccent[500]}
               sx={{ mt: "15px" }}
             >
-              {termData1.passingStudents} Số lượng Đạt Học kỳ 1
+              Số lượng học sinh đạt học kỳ I: {termData1.passingStudents}
             </Typography>
-            <Typography>Includes extra misc expenditures and costs</Typography>
+            <Typography>Trung bình số lượng học sinh đạt và tỷ lệ đạt của các lớp</Typography>
           </Box>
         </Box>
         <Box
@@ -224,15 +248,15 @@ const Dashboard = () => {
             alignItems="center"
             mt="25px"
           >
-            <ProgressCircle size="125" progress={termData2.passRate || 1} />
+            <ProgressCircle size="125" progress={formatScore(termData2.passRate)} increase={`${formatScore(termData2.passRate)}%`}/>
             <Typography
               variant="h5"
               color={colors.purpleAccent[500]}
               sx={{ mt: "15px" }}
             >
-              {termData2.passingStudents} Số lượng Đạt Học kỳ 2
+              Số lượng học sinh đạt học kỳ II: {termData2.passingStudents}
             </Typography>
-            <Typography>Includes extra misc expenditures and costs</Typography>
+            <Typography>Trung bình số lượng học sinh đạt và tỷ lệ đạt của các lớp</Typography>
           </Box>
         </Box>
       </Box>

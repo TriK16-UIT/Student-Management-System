@@ -19,7 +19,7 @@ const OutReport = () => {
   return (
     <div>
       <Box m="20px">
-        <Header title="Lập bảng tổng kết môn"/>
+        <Header title="Lập bảng báo cáo tổng kết"/>
       </Box>
       
       <Box

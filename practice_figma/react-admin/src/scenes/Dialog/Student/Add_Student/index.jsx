@@ -22,7 +22,7 @@ const DialogAddStudent = () => {
 
   return (
     <Box m="20px" textAlign="center">
-      <Header title="Thêm sinh viên"/>
+      <Header title="Thêm học sinh"/>
       <Formik
         onSubmit={handleFormSubmit}
         initialValues={initialValues}

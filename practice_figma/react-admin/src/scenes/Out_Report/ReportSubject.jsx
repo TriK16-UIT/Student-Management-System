@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Select, MenuItem, FormControl, InputLabel, Grid, Box, Button } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
+import * as XLSX from 'xlsx';
 
 import Header from '../../components/Header';
 import { useTheme } from '@emotion/react';
@@ -32,7 +33,6 @@ const ReportSubject = () => {
         }
 
         const data = await response.json();
-        // Format subject names to Vietnamese
         const formattedData = data.map(subject => ({
           ...subject,
           name: formatSubjectName(subject.name),
@@ -47,7 +47,6 @@ const ReportSubject = () => {
   }, [user]);
 
   const formatSubjectName = (name) => {
-    // Example of basic formatting, adjust as needed
     switch (name.toLowerCase()) {
       case 'math':
         return 'Toán';
@@ -68,7 +67,7 @@ const ReportSubject = () => {
       case 'pe':
         return 'Thể dục';
       default:
-        return name; // return original name if no match
+        return name;
     }
   };
 
@@ -108,7 +107,6 @@ const ReportSubject = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    // Trigger the data fetch based on the selected term and subject
     if (selectedTerm && selectedSubject) {
       const fetchTermData = async () => {
         try {
@@ -150,11 +148,26 @@ const ReportSubject = () => {
     { field: 'passRate', headerName: 'Tỉ lệ', width: 180 },
   ];
 
+  const exportToExcel = () => {
+    const dataToExport = termData.map((student, index) => ({
+      STT: index + 1,
+      "Lớp": student.className,
+      "Sỉ số": student.totalStudents,
+      "Số lượng đạt": student.passingStudents,
+      "Tỉ lệ đạt": student.passRate
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Term Data");
+    XLSX.writeFile(workbook, `Term_${selectedTerm}_Subject_${selectedSubject}_Data.xlsx`);
+  };
+
   return (
     <Box m="20px" mb="20px">
       <Header title="Lập bảng tổng kết" subtitle="Học kỳ và Môn học" />
       <form onSubmit={handleSubmit}>
-        <Grid container spacing={3}>
+        <Grid container spacing={3} justifyContent="center">
           <Grid item xs={4}>
             <FormControl fullWidth>
               <InputLabel>Học kỳ</InputLabel>
@@ -184,9 +197,14 @@ const ReportSubject = () => {
               </Select>
             </FormControl>
           </Grid>
+          <Grid item xs={4}>
+            <Button variant="contained" color="secondary" onClick={exportToExcel}>
+              Xuất file excel
+            </Button>
+          </Grid>
         </Grid>
       </form>
-
+      
       <Box
         m="40px 0 0 0"
         height="75vh"

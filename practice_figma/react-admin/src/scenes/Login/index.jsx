@@ -46,7 +46,7 @@ const LoginPage = () => {
 
     const isSuccess = await login(username, password);
     if (isSuccess) {
-      navigate(`/users_management`)
+      navigate(`/`)
     }
   };
 
@@ -63,12 +63,6 @@ const LoginPage = () => {
                   height="100px"
                   src={isToggled ? `../../assets/Screenshot 2024-06-19 232207.png` : `../../assets/608-6081199_teacher-registration-anastasia-beverly-hills-logo-vector-hd.png`}
                   style={{ cursor: "pointer", borderRadius: "50%" }}
-                />
-              </Box>
-              <Box sx={{ border: `2px solid ${colors.purpleAccent[500]}`, borderRadius: '8px', display: 'inline-block', mb: 2, width: '200px' }}>
-                <FormControlLabel
-                  control={<CustomSwitch checked={isToggled} onChange={handleChange} />}
-                  label={isToggled ? 'Giáo viên' : 'Ban quản lý'}
                 />
               </Box>
               <Typography component="p" variant="subtitle1" color={colors.grey[500]}>

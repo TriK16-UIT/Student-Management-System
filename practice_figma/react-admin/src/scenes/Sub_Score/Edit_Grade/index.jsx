@@ -19,24 +19,24 @@ const PatchGrade = ({ studentId }) => {
   const { dispatch } = useGradesContext();
 
   useEffect(() => {
-    if(studentId === null ) return
-    dispatch({ type: 'START_EDITING', payload: studentId });
+    if (studentId === null) return;
+    dispatch({ type: "START_EDITING", payload: studentId });
 
     const fetchGrade = async () => {
-        const response = await fetch(`http://localhost:4000/api/grade/${studentId}`, {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-          method: "GET",
-        });
-        if (!response.ok) {
-          throw new Error("Failed to fetch grade information");
-        }
-        const json = await response.json();
-        console.log("Fetched grade:", json);
-        setStudentData(json);
-        setLoading(false);
-        dispatch({ type: "GET_GRADE", payload: json });
+      const response = await fetch(`http://localhost:4000/api/grade/${studentId}`, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+        method: "GET",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch grade information");
+      }
+      const json = await response.json();
+      console.log("Fetched grade:", json);
+      setStudentData(json);
+      setLoading(false);
+      dispatch({ type: "GET_GRADE", payload: json });
     };
 
     fetchGrade();
@@ -49,22 +49,21 @@ const PatchGrade = ({ studentId }) => {
     }
 
     console.log("Submitting values:", values);
-      const response = await fetch(`http://localhost:4000/api/grade/${studentId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user.token}`,
-        },
-        body: JSON.stringify(values),
-      });
-      if (response.ok) {
-        const updatedGrade = await response.json();
-        dispatch({ type: "UPDATE_GRADE", payload: updatedGrade });
-      } else {
-        const errorData = await response.json();
-        console.error("Failed to update grade information", errorData);
-      }
-   
+    const response = await fetch(`http://localhost:4000/api/grade/${studentId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${user.token}`,
+      },
+      body: JSON.stringify(values),
+    });
+    if (response.ok) {
+      const updatedGrade = await response.json();
+      dispatch({ type: "UPDATE_GRADE", payload: updatedGrade });
+    } else {
+      const errorData = await response.json();
+      console.error("Failed to update grade information", errorData);
+    }
   };
 
   const initialValues = studentData
@@ -78,13 +77,22 @@ const PatchGrade = ({ studentId }) => {
       };
 
   const validationSchema = yup.object().shape({
-    score15Min: yup.number().required("Vui lòng nhập điểm 15 phút"),
-    score45Min: yup.number().required("Vui lòng nhập điểm 45 phút"),
+    score15Min: yup
+      .number()
+      .required("Vui lòng nhập điểm 15 phút")
+      .min(0, "Điểm không thể nhỏ hơn 0")
+      .max(10, "Điểm không thể lớn hơn 10"),
+    score45Min: yup
+      .number()
+      .required("Vui lòng nhập điểm 45 phút")
+      .min(0, "Điểm không thể nhỏ hơn 0")
+      .max(10, "Điểm không thể lớn hơn 10"),
   });
+
   const handleEditChange = (e) => {
     dispatch({
-      type: 'UPDATE_FORM',
-      payload: { [e.target.name]: e.target.value }
+      type: "UPDATE_FORM",
+      payload: { [e.target.name]: e.target.value },
     });
   };
 
@@ -134,6 +142,7 @@ const PatchGrade = ({ studentId }) => {
                 error={!!touched.score15Min && !!errors.score15Min}
                 helperText={touched.score15Min && errors.score15Min}
                 sx={{ gridColumn: "span 2" }}
+                inputProps={{ min: 0, max: 10 }}
               />
 
               <TextField
@@ -151,6 +160,7 @@ const PatchGrade = ({ studentId }) => {
                 error={!!touched.score45Min && !!errors.score45Min}
                 helperText={touched.score45Min && errors.score45Min}
                 sx={{ gridColumn: "span 2" }}
+                inputProps={{ min: 0, max: 10 }}
               />
             </Box>
             <Box display="flex" justifyContent="end" mt="20px">

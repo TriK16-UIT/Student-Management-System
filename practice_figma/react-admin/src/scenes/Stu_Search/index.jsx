@@ -59,11 +59,20 @@ const StuSearch = () => {
     fetchClassData();
   }, [user]);
 
+  const formatClass = (name) => {
+    switch (name) {
+      case 'No Class':
+        return 'Chưa có lớp';
+      default:
+        return name;
+    }
+  };
+
   const rowsClassData = classData.map((student, index) => ({
     id: index + 1,
     studentID: student.studentID,
     studentName: student.studentName,
-    className: student.className,
+    className: formatClass(student.className),
     termIAverage: student.termIAverage,
     termIIAverage: student.termIIAverage
   }));
