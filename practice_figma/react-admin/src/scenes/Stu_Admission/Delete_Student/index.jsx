@@ -1,8 +1,6 @@
 import { Button } from "@mui/material";
 import { useAuthContext } from "../../../hooks/useAuthContext"
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import EditIcon from '@mui/icons-material/Edit';
-import { Link } from "react-router-dom";
 import { useStudentInfsContext } from "../../../hooks/useStudentContext";
 
 const DeleteStudent = ({ params }) => {
@@ -45,7 +43,7 @@ const DeleteStudent = ({ params }) => {
                     },
                 }}
             >
-                DELETE
+                XOÁ
             </Button>
             {/* <Link to ={`/dashboard/home/${row.id}`} >
             <Button

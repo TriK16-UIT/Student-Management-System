@@ -1,13 +1,64 @@
+import { useEffect, useState } from "react";
 import { Box, Button, FormControl, InputLabel, MenuItem, Select, TextField } from "@mui/material";
 import { Formik } from "formik";
 import * as yup from "yup";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import Header from "../../../components/Header";
 import { useSignup } from "../../../hooks/useSignupTeacher";
+import { useAuthContext } from "../../../context/AuthContext";
+
+const formatSubjectName = (name) => {
+  switch (name.toLowerCase()) {
+    case 'math':
+      return 'Toán';
+    case 'physics':
+      return 'Vật lý';
+    case 'chemistry':
+      return 'Hóa học';
+    case 'biology':
+      return 'Sinh học';
+    case 'history':
+      return 'Lịch sử';
+    case 'geography':
+      return 'Địa lý';
+    case 'literature':
+      return 'Ngữ văn';
+    case 'ethics':
+      return 'Giáo dục công dân';
+    case 'pe':
+      return 'Thể dục';
+    default:
+      return name;
+  }
+};
 
 const TeacherSignUp = ({ params }) => {
-  const { signup, error, isLoading } = useSignup(); // Adjust hook function based on your implementation
+  const { signup, error, isLoading } = useSignup(); 
   const isNonMobile = useMediaQuery("(min-width:600px)");
+  const { user } = useAuthContext();
+  const [subjects, setSubjects] = useState([]);
+
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        const response = await fetch('http://localhost:4000/api/subject', {
+          headers: {
+            'Authorization': `Bearer ${user.token}`
+            }
+        });
+        const data = await response.json();
+        console.log("Fetched subjects data:", data); // Debug log
+        if (Array.isArray(data)) {
+          setSubjects(data);
+        } else {
+          console.error('Fetched data is not an array:', data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch subjects:', error);
+      }
+    };
+    fetchSubjects();
+  }, [user]);
 
   const handleFormSubmit = async (values) => {
     await signup(
@@ -16,7 +67,7 @@ const TeacherSignUp = ({ params }) => {
       values.email,
       values.username,
       values.password,
-      values.role, // Ensure role is passed here
+      values.role, 
       values.subjectName,
     );
 
@@ -128,10 +179,15 @@ const TeacherSignUp = ({ params }) => {
                   name="subjectName"
                   error={!!touched.subjectName && !!errors.subjectName}
                 >
-                  <MenuItem value="Math">Toán</MenuItem>
-                  <MenuItem value="Physics">Vật lý</MenuItem>
-                  <MenuItem value="History">Lịch sử</MenuItem>
-                  {/* Add more options as needed */}
+                  {subjects.length > 0 ? (
+                    subjects.map(subject => (
+                      <MenuItem key={subject._id} value={subject.name}>
+                        {formatSubjectName(subject.name)}
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem disabled>Loading...</MenuItem>
+                  )}
                 </Select>
               </FormControl>
               <TextField

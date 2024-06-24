@@ -28,7 +28,6 @@ function App() {
 
   // Hide sidebar on login page
   const hideSidebar = location.pathname === '/login';
-  console.log(user)
   return (
     <ColorModeContext.Provider value={colorMode}>
       <ThemeProvider theme={theme}>

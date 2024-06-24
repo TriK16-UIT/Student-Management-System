@@ -27,6 +27,7 @@ const ClaList = () => {
   const { classes, dispatch } = useClassContext();
   const colors = tokens(theme.palette.mode);
   const [open, setOpen] = useState(false);
+  const [classMax,setClassMax] = useState([]);
   const navigate = useNavigate();
 
   const handleOpen = () => {
@@ -38,31 +39,48 @@ const ClaList = () => {
   };
 
   useEffect(() => {
-    const fetchClasses = async () => {
+    const fetchData = async () => {
       try {
         if (user && user.token) {
-          const response = await fetch("http://localhost:4000/api/class/", {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${user.token}`,
-            },
-          });
-          if (!response.ok) {
+          // Fetch both classes and class maximum size concurrently
+          const [classesResponse, classMaxResponse] = await Promise.all([
+            fetch("http://localhost:4000/api/class/", {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${user.token}`,
+              },
+            }),
+            fetch("http://localhost:4000/api/config/", {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${user.token}`,
+              },
+            }),
+          ]);
+  
+          // Handle response for classes
+          if (!classesResponse.ok) {
             throw new Error("Failed to fetch classes");
           }
-          const data = await response.json();
-          dispatch({ type: "SET_CLASSES", payload: data });
+          const classesData = await classesResponse.json();
+          dispatch({ type: "SET_CLASSES", payload: classesData });
+  
+          // Handle response for class maximum size
+          if (!classMaxResponse.ok) {
+            throw new Error("Failed to fetch class maximum size");
+          }
+          const classMaxData = await classMaxResponse.json();
+          setClassMax(classMaxData.maxClassSize);
         }
       } catch (error) {
-        console.error("Error fetching classes:", error);
+        console.error("Error fetching data:", error);
         // Handle error here, such as displaying an error message or logging out the user
       }
     };
-
-    if (user) {
-      fetchClasses();
-    }
+  
+    fetchData();
   }, [dispatch, user]);
 
   const handleEditClick = (id) => {
@@ -105,7 +123,7 @@ const ClaList = () => {
       headerName: "Sỉ số",
       flex: 1,
       renderCell: (params) => {
-        return `${params.value}/40`;
+        return `${params.value}/${classMax}`;
       },
     },
     {

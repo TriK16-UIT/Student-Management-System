@@ -23,6 +23,7 @@ const ClaListEdit = () => {
 
   const [addingToClass, setAddingToClass] = useState(false);
   const [addToClassError, setAddToClassError] = useState(null);
+  const [classMax,setClassMax] = useState([]);
 
   useEffect(() => {
     const fetchClassData = async () => {
@@ -37,9 +38,9 @@ const ClaListEdit = () => {
         if (!response.ok) {
           throw new Error("Failed to fetch class data");
         }
-
         const data = await response.json();
         setClassData(data);
+        console.log("numba of ", classData)
       } catch (error) {
         console.error("Error fetching class data:", error);
       }
@@ -47,6 +48,26 @@ const ClaListEdit = () => {
 
     fetchClassData();
   }, [id, user]);
+
+  useEffect(() => {
+    const fetchClasseMax = async () => {
+      const response = await fetch("http://localhost:4000/api/config/", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch classes");
+      }
+      const data = await response.json();
+      setClassMax(data.maxClassSize);
+    }
+    if (user) {
+      fetchClasseMax();
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchStudentsByClass = async () => {
@@ -94,6 +115,7 @@ const ClaListEdit = () => {
   }, [user]);
 
   const handleOpen = () => {
+    fetchStudentsWithoutClass();
     setOpen(true);
   };
 
@@ -102,45 +124,47 @@ const ClaListEdit = () => {
   };
 
   const handleAddToClass = async () => {
+    // Check if adding selected students exceeds classMax
+    if (arrIds.length + classMembers.length > classMax) {
+      setAddToClassError(`Thêm học sinh đã chọn sẽ vượt quá kích thước lớp tối đa là ${classMax}`);
+      return;
+    }
+  
     console.log(arrIds); // Use the new selection model
     const selectedStudents = studentsWithoutClass.filter(student => arrIds.includes(student._id));
-
+  
+    const promises = selectedStudents.map(async (student) => {
+      const response = await fetch(`http://localhost:4000/api/student/${student._id}`, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+          "Content-Type": "application/json",
+        },
+        method: "PATCH",
+        body: JSON.stringify({
+          ClassID: id
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Failed to update student ${student._id}`);
+      }
+      const patchedStudent = await response.json();
+      return patchedStudent;
+    });
+  
     try {
-        // Disable the button and clear any previous errors
-        setAddingToClass(true);
-        setAddToClassError(null);
-
-        for (let i = 0; i < selectedStudents.length; i++) {
-            const student = selectedStudents[i];
-            const response = await fetch(`http://localhost:4000/api/student/${student._id}`, {
-                headers: {
-                    Authorization: `Bearer ${user.token}`,
-                    "Content-Type": "application/json",
-                },
-                method: "PATCH",
-                body: JSON.stringify({
-                    ClassID: id
-                }),
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to update student ${student._id}`);
-            }
-
-            const patchedStudent = await response.json();
-            dispatch({ type: "ADD_CLASS_MEMBER", payload: patchedStudent });
-        }
-
-        fetchStudentsWithoutClass();
-        handleClose(); // Close the dialog
+      const results = await Promise.all(promises);
+      console.log("Updated students:", results);
+  
+      dispatch({ type: "ADD_CLASS_MEMBERS", payload: results });
+      fetchStudentsWithoutClass();
+      handleClose(); // Close the dialog
+      setAddToClassError(null); // Clear any previous errors
     } catch (error) {
-        console.error("Error adding students to class:", error);
-        setAddToClassError(error.message || "Failed to add students to class.");
-    } finally {
-        setAddingToClass(false); // Re-enable the button
+      console.error("Error adding students to class:", error);
+      // Handle error, display error message, etc.
     }
-};
-
+  };
 
   const columns_students = [
     { field: "id", headerName: "STT", width: 90 },
@@ -273,6 +297,9 @@ const ClaListEdit = () => {
             >
               Thêm học sinh vào lớp
             </Button>
+            <Box display="flex" justifyContent="center">
+              {addToClassError && <div>{addToClassError}</div>}
+            </Box>
           </Stack>
         </DialogContent>
       </Dialog>

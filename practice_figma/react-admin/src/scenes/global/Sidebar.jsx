@@ -162,6 +162,7 @@ const Sidebar = () => {
               setSelected={setSelected}
             />
             )}
+            {!isTeacher && (
             <Item
               title="Lập danh sách lớp"
               to="/class_list"
@@ -169,6 +170,7 @@ const Sidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
+            )}
             <Item
               title="Tra cứu học sinh"
               to="/student_look_up"

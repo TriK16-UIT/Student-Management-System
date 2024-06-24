@@ -107,9 +107,6 @@ const Dashboard = () => {
           const totalPassRate2 = data2.reduce((sum, obj) => sum + (parseFloat(obj.passRate) || 0), 0);
           const averagePassRate2 = totalPassRate2 / data2.length;
 
-          console.log(averagePassRate1)
-          console.log(averagePassRate2)
-          
           setTermData1({
             passRate: averagePassRate1 / 100,
             passingStudents: totalPassingStudents1

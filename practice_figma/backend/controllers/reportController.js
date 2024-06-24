@@ -126,7 +126,7 @@ const getAllStudentsWithAverageScores = async (req, res) => {
 
             return {
                 studentID: student._id,
-                studentName: student.firstName+ ' ' + student.lastName,
+                studentName: student.lastName + ' ' + student.firstName,
                 className: classInfo,
                 termIAverage: termIAverage.toFixed(2),
                 termIIAverage: termIIAverage.toFixed(2)

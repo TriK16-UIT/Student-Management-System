@@ -10,11 +10,6 @@ const DeleteStudentID = ({ params }) => {
 
     const handleDeleteClick = async () => {
         try {
-            if (!user) {
-                console.error("User not authenticated");
-                return;
-            }
-
             const response = await fetch(`http://localhost:4000/api/student/${row._id}`, {
                 method: 'PATCH',
                 headers: {

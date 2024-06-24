@@ -76,18 +76,18 @@ const PatchGrade = ({ studentId }) => {
         score45Min: "",
       };
 
-  const validationSchema = yup.object().shape({
-    score15Min: yup
-      .number()
-      .required("Vui lòng nhập điểm 15 phút")
-      .min(0, "Điểm không thể nhỏ hơn 0")
-      .max(10, "Điểm không thể lớn hơn 10"),
-    score45Min: yup
-      .number()
-      .required("Vui lòng nhập điểm 45 phút")
-      .min(0, "Điểm không thể nhỏ hơn 0")
-      .max(10, "Điểm không thể lớn hơn 10"),
-  });
+    const validationSchema = yup.object().shape({
+      score15Min: yup
+        .number()
+        .required("Vui lòng nhập điểm 15 phút")
+        .min(0, "Điểm không thể nhỏ hơn 0")
+        .max(10, "Điểm không thể lớn hơn 10"),
+      score45Min: yup
+        .number()
+        .required("Vui lòng nhập điểm 45 phút")
+        .min(0, "Điểm không thể nhỏ hơn 0")
+        .max(10, "Điểm không thể lớn hơn 10"),
+    });
 
   const handleEditChange = (e) => {
     dispatch({
@@ -128,40 +128,34 @@ const PatchGrade = ({ studentId }) => {
               }}
             >
               <TextField
-                fullWidth
-                variant="filled"
-                type="number"
-                label="Điểm 15 phút"
-                onBlur={handleBlur}
-                onChange={(e) => {
-                  handleChange(e);
-                  handleEditChange(e);
-                }}
-                value={values.score15Min}
-                name="score15Min"
-                error={!!touched.score15Min && !!errors.score15Min}
-                helperText={touched.score15Min && errors.score15Min}
-                sx={{ gridColumn: "span 2" }}
-                inputProps={{ min: 0, max: 10 }}
-              />
+              fullWidth
+              variant="filled"
+              type="number"
+              label="Điểm 15 phút"
+              onBlur={handleBlur}
+              onChange={handleChange}
+              value={values.score15Min}
+              name="score15Min"
+              error={!!touched.score15Min && !!errors.score15Min}
+              helperText={touched.score15Min && errors.score15Min}
+              sx={{ gridColumn: "span 2" }}
+              inputProps={{ step: "any", min: 0, max: 10 }} // Accepts any step and enforces min/max
+            />
 
-              <TextField
-                fullWidth
-                variant="filled"
-                type="number"
-                label="Điểm 45 phút"
-                onBlur={handleBlur}
-                onChange={(e) => {
-                  handleChange(e);
-                  handleEditChange(e);
-                }}
-                value={values.score45Min}
-                name="score45Min"
-                error={!!touched.score45Min && !!errors.score45Min}
-                helperText={touched.score45Min && errors.score45Min}
-                sx={{ gridColumn: "span 2" }}
-                inputProps={{ min: 0, max: 10 }}
-              />
+            <TextField
+              fullWidth
+              variant="filled"
+              type="number"
+              label="Điểm 45 phút"
+              onBlur={handleBlur}
+              onChange={handleChange}
+              value={values.score45Min}
+              name="score45Min"
+              error={!!touched.score45Min && !!errors.score45Min}
+              helperText={touched.score45Min && errors.score45Min}
+              sx={{ gridColumn: "span 2" }}
+              inputProps={{ step: "any", min: 0, max: 10 }} // Accepts any step and enforces min/max
+            />
             </Box>
             <Box display="flex" justifyContent="end" mt="20px">
               <Button type="submit" color="secondary" variant="contained">
