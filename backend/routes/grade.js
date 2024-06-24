@@ -15,7 +15,7 @@ const isAdmin = require('../middleware/isAdmin')
 
 const router = express.Router()
 
-router.patch('/:id', requireAuth, isAdmin, updateGrade)
+router.patch('/:id', requireAuth, updateGrade)
 router.get('/:id', requireAuth, getGrade)
 router.get('/student/:StudentID', requireAuth, getGradebyStudentID)
 router.get('/student/:StudentID/term/:term', requireAuth, getGradebyStudentIDTerm)

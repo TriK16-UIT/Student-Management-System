@@ -149,6 +149,42 @@ const deleteTeacher = async (req, res) => {
     return res.status(200).json(teacher)
 }
 
+const deleteTeacherbyUserID = async (req, res) => {
+    const id = req.params.UserID
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({error: 'No such user'})
+    }
+
+    const teacher = await Teacher.findOne({ UserID: id })
+
+    if (!teacher) {
+        return res.status(400).json({error: 'No such teacher'})
+    }
+
+    await Teacher.findOneAndDelete({ UserID: id })
+    await User.findByIdAndDelete(id)
+    await ClassSubject.updateMany({ TeacherID: teacher._id }, { $unset: { TeacherID: "" } })
+
+    return res.status(200).json(teacher)
+}
+
+const getTeacherbyUserID = async (req, res) => {
+    const id = req.params.UserID
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({error: 'No such user'})
+    }
+
+    const teacher = await Teacher.findOne({ UserID: id }).populate('UserID').populate('SubjectID')
+
+    if (!teacher) {
+        return res.status(400).json({error: 'No such teacher'})
+    }
+
+    return res.status(200).json(teacher);
+}
+
 const getTeachersbySubjectID = async (req, res) => {
     const SubjectID = req.params.SubjectID
 
@@ -163,7 +199,9 @@ module.exports = {
     createTeacher,
     getTeacher,
     getTeachers,
+    getTeacherbyUserID,
     updateTeacher,
     deleteTeacher,
+    deleteTeacherbyUserID,
     getTeachersbySubjectID
 }

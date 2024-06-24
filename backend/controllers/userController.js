@@ -15,7 +15,9 @@ const loginUser = async (req, res) => {
         //create a token
         const token = createToken(user._id)
 
-        res.status(200).json({username, token})
+        const role = user.role
+
+        res.status(200).json({username, token, role})
     } catch (error) {
         res.status(400).json({error: error.message})
     }
@@ -120,7 +122,7 @@ const updateUser = async (req, res) => {
 
     const user = await User.findOneAndUpdate({ _id: id }, {
         ...req.body
-    }, { new: true })
+    }, { new: true }).select('-password')
 
     if (!user) {
         return res.status(400).json({error: 'No such user'})
@@ -135,11 +137,18 @@ const deleteUser = async (req, res) => {
         return res.status(404).json({error: 'No such user'})
     }
 
-    const user = await User.findOneAndDelete({ _id:id })
+    const check_role = await User.findById(id)
 
-    if (!user) {
+    if (!check_role) {
         return res.status(400).json({error: 'No such user'})
     }
+
+    if (check_role.role === 'teacher') {
+        return res.status(400).json({ error: 'Use the deleteTeacher endpoint'})
+    }
+
+    const user = await User.findOneAndDelete({ _id:id })
+
     return res.status(200).json(user)
 }
 
