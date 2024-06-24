@@ -5,7 +5,8 @@ const {
     getTeachers,
     updateTeacher,
     deleteTeacher,
-    getTeachersbySubjectID
+    getTeachersbySubjectID,
+    deleteTeacherbyUserID,
 } = require('../controllers/teacherController')
 
 const requireAuth = require('../middleware/requireAuth')
@@ -20,5 +21,6 @@ router.get('/:id', requireAuth, getTeacher)
 router.get('/bySubject/:SubjectID', requireAuth, getTeachersbySubjectID)
 router.patch('/:id', requireAuth, isAdmin, updateTeacher)
 router.delete('/:id', requireAuth, isAdmin, deleteTeacher)
+router.delete('/byUser/:UserID', requireAuth, isAdmin, deleteTeacherbyUserID)
 
 module.exports = router

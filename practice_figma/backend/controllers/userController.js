@@ -137,11 +137,18 @@ const deleteUser = async (req, res) => {
         return res.status(404).json({error: 'No such user'})
     }
 
-    const user = await User.findOneAndDelete({ _id:id })
+    const check_role = await User.findById(id)
 
-    if (!user) {
+    if (!check_role) {
         return res.status(400).json({error: 'No such user'})
     }
+
+    if (check_role.role === 'teacher') {
+        return res.status(400).json({ error: 'Use the deleteTeacher endpoint'})
+    }
+
+    const user = await User.findOneAndDelete({ _id:id })
+
     return res.status(200).json(user)
 }
 

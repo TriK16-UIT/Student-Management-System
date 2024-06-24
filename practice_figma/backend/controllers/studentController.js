@@ -110,14 +110,32 @@ const updateStudent = async (req, res) => {
         }
     }
 
-    if ('email' in req.body) {
-        const email = req.body.email
-        if (!validator.isEmail( email )) {
-            return res.status(400).json({ error: 'Email is not valid!' })
+   
+  if ('email' in req.body) {
+    const email = req.body.email;
+    if (!validator.isEmail(email)) {
+      return res.status(400).json({ error: 'Email is not valid!' });
+    }
+
+    try {
+      const studentWithSameEmail = await Student.findOne({ email });
+      if (studentWithSameEmail && studentWithSameEmail._id.toString() !== id) {
+        return res.status(400).json({ error: 'Email already in use' });
+      }
+    } catch (error) {
+      console.error("Error checking email uniqueness:", error);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
+
+    if ('ClassID' in req.body) {
+        const classExists = await Class.findById(req.body.ClassID)
+        if (!classExists) {
+            return res.status(400).json({ error: 'No such class' })
         }
-        const exists_email = await Student.findOne({ email })
-        if (exists_email) {
-            return res.status(400).json({ error: 'Email already in use' })
+
+        if (classExists.numofStudents >= config.maxClassSize) {
+            return res.status(400).json({ error: 'Class is full' })
         }
     }
 
@@ -126,39 +144,20 @@ const updateStudent = async (req, res) => {
         return res.status(400).json({error: 'No such student'})
     }
 
-    const update = { ...req.body }
-
     if ('ClassID' in req.body) {
-        if (req.body.ClassID === "") {
-            if (student.ClassID) {
-                await Class.findByIdAndUpdate(student.ClassID, { $inc: { numofStudents: -1 } });
-                await Student.updateOne({ _id: id }, { $unset: {ClassID: "" } })
-                delete update.ClassID
+        if (student.ClassID) {
+            if (student.ClassID.toString() !== req.body.ClassID) {
+                await Class.findByIdAndUpdate(student.ClassID, { $inc: { numofStudents: -1 } })
+                await Class.findByIdAndUpdate(req.body.ClassID, { $inc: { numofStudents: 1 } })
             }
         } else {
-            const classExists = await Class.findById(req.body.ClassID);
-            if (!classExists) {
-                return res.status(400).json({ error: 'No such class' });
-            }
-
-            if (classExists.numofStudents >= config.maxClassSize) {
-                return res.status(400).json({ error: 'Class is full' });
-            }
-
-            if (student.ClassID) {
-                if (student.ClassID.toString() !== req.body.ClassID) {
-                    await Class.findByIdAndUpdate(student.ClassID, { $inc: { numofStudents: -1 } });
-                    await Class.findByIdAndUpdate(req.body.ClassID, { $inc: { numofStudents: 1 } });
-                }
-            } else {
-                await Class.findByIdAndUpdate(req.body.ClassID, { $inc: { numofStudents: 1 } });
-            }
+            await Class.findByIdAndUpdate(req.body.ClassID, { $inc: { numofStudents: 1 } })
         }
     }
 
-    const updated_student = await Student.findOneAndUpdate({ _id: id },
-        update
-    , { new: true })
+    const updated_student = await Student.findOneAndUpdate({ _id: id }, {
+        ...req.body
+    }, { new: true })
 
     return res.status(200).json(updated_student)
 }
