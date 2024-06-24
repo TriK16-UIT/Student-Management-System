@@ -91,7 +91,7 @@ const deleteStudent = async (req, res) => {
     }
 
     const result = await deleteGradesByStudentID(student._id)
-
+    
     if (!result.success) {
         return res.status(400).json({ error: result.error })
     }
