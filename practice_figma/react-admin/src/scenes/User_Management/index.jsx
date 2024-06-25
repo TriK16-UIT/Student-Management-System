@@ -18,39 +18,24 @@ import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import GppBadIcon from "@mui/icons-material/GppBad";
 import CloseIcon from "@mui/icons-material/Close";
 import MainDialog from "../Dialog/Main";
-<<<<<<< HEAD
 
-=======
-import { useAuthContext } from "../../hooks/useAuthContext";
->>>>>>> cda7a7b7e5b0c3d57c3ce3c7753a94959e1f3ef7
 import { useUserContext } from "../../hooks/useUserContext";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteUser from "./Delete_User";
 import EditUser from "../Dialog/User/Edit_User/Edit_User";
 import EditTeacher from "../Dialog/User/Edit_Teacher/Edit_Teacher";
-<<<<<<< HEAD
 import Edit from "@mui/icons-material/Edit";
 import { useAuthContext } from "../../context/AuthContext";
-=======
-import { useSignup } from "../../hooks/useSignup";
-import Edit from "@mui/icons-material/Edit";
->>>>>>> cda7a7b7e5b0c3d57c3ce3c7753a94959e1f3ef7
 
 const UserManage = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const { user } = useAuthContext();
-<<<<<<< HEAD
   const { users, dispatch } = useUserContext();
-=======
-  const { signup } = useSignup();
-  const { userinfs, dispatch } = useUserContext();
->>>>>>> cda7a7b7e5b0c3d57c3ce3c7753a94959e1f3ef7
   const [dialogState, setDialogState] = useState(null);
   const [open, setOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
-<<<<<<< HEAD
   useEffect(() => {
     const fetchUsers = async () => {
       const response = await fetch("http://localhost:4000/api/user/", {
@@ -75,29 +60,6 @@ const UserManage = () => {
     return () => clearTimeout(timeoutId);
   }, [dispatch, user.token]); // Added user.token to dependency array
     
-=======
-  const fetchUsers = async () => {
-    if (user && user.token) {
-      try {
-        const response = await fetch("http://localhost:4000/api/user/", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${user.token}`,
-          },
-        });
-        if (!response.ok) {
-          throw new Error("Failed to fetch users");
-        }
-        const json = await response.json();
-        dispatch({ type: "SET_USERS", payload: json });
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
-    }
-  };
-
->>>>>>> cda7a7b7e5b0c3d57c3ce3c7753a94959e1f3ef7
   const handleOpen = (state) => {
     setDialogState(state);
     setOpen(true);
@@ -108,23 +70,13 @@ const UserManage = () => {
     setDialogState(null);
   };
 
-<<<<<<< HEAD
   const RowUsers= users ? users.map((user, index) => ({
-=======
-  const rows = userinfs
-    ? userinfs.map((user, index) => ({
->>>>>>> cda7a7b7e5b0c3d57c3ce3c7753a94959e1f3ef7
         id: index + 1,
         _id: user._id,
         fullName: `${user.firstName} ${user.lastName}`,
         email: user.email,
         role: user.role,
-<<<<<<< HEAD
       })): [];
-=======
-      }))
-    : [];
->>>>>>> cda7a7b7e5b0c3d57c3ce3c7753a94959e1f3ef7
 
   const columns = [
     { field: "id", headerName: "STT", width: 90 },

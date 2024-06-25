@@ -6,13 +6,8 @@ const {
     getTeacherbyUserID,
     updateTeacher,
     deleteTeacher,
-<<<<<<< HEAD
     deleteTeacherbyUserID,
     getTeachersbySubjectID
-=======
-    getTeachersbySubjectID,
-    deleteTeacherbyUserID,
->>>>>>> cda7a7b7e5b0c3d57c3ce3c7753a94959e1f3ef7
 } = require('../controllers/teacherController')
 
 const requireAuth = require('../middleware/requireAuth')
