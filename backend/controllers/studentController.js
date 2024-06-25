@@ -2,6 +2,7 @@ const Student = require('../models/studentModel')
 const Class = require('../models/classModel')
 const Config = require('../models/configModel')
 const validator = require('validator')
+const User = require('../models/userModel')
 const mongoose = require('mongoose')
 const { 
     createGrades,
@@ -48,8 +49,9 @@ const createStudent = async (req, res) => {
         }
 
         const exists_email = await Student.findOne({ email: email })
+        const exists_email_in_user = await User.findOne({ email: email })
 
-        if (exists_email) {
+        if (exists_email || exists_email_in_user) {
             throw Error('Email already in use!')
         }
 
@@ -120,7 +122,8 @@ const updateStudent = async (req, res) => {
             return res.status(400).json({ error: 'Email is not valid!' })
         }
         const exists_email = await Student.findOne({ email })
-        if (exists_email) {
+        const exists_email_in_user = await User.findOne({ email })
+        if (exists_email || exists_email_in_user) {
             return res.status(400).json({ error: 'Email already in use' })
         }
     }

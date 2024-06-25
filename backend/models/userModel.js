@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
 const validator = require('validator')
+const Student = require('./studentModel')
 
 const Schema = mongoose.Schema
 
@@ -73,8 +74,9 @@ userSchema.statics.signup = async function(username, password, firstName, lastNa
     }
 
     const exists_email = await this.findOne({email})
+    const exists_email_in_student = await Student.findOne({email})
 
-    if (exists_email) {
+    if (exists_email || exists_email_in_student) {
         throw Error('Email already in use!')
     }
 
