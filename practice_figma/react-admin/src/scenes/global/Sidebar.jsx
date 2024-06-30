@@ -18,7 +18,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import PeopleOutlineIcon from '@mui/icons-material/PeopleOutline';
 import { useLogout } from "../../hooks/useLogout";
 import { useAuthContext } from "../../hooks/useAuthContext";
-
+import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
 const Item = ({ title, to, icon, selected, setSelected, onClick }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -167,6 +167,15 @@ const Sidebar = () => {
               title="Lập danh sách lớp"
               to="/class_list"
               icon={<FolderIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            )}
+            {!isTeacher && (
+            <Item
+              title="Môn học"
+              to="/subjects"
+              icon={<DocumentScannerIcon/>}
               selected={selected}
               setSelected={setSelected}
             />

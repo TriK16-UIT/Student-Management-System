@@ -27,6 +27,12 @@ const SubScores = () => {
 
   const { grades, dispatch } = useGradesContext();
 
+  const [boxHeight, setBoxHeight] = useState(400); 
+
+  const handlePageSizeChange = (newPageSize) => {
+      setBoxHeight(newPageSize * 52 + 110); // Adjust the height based on the new page size
+    };
+
   const handleOpen = (state, id = null) => {
     setDialogState(state);
     setSelectedStudentId(id);
@@ -158,7 +164,7 @@ const SubScores = () => {
   };
 
   const columns = [
-    { field: 'id', headerName: 'ID', width: 90 },
+    { field: 'id', headerName: 'STT', width: 90 },
     { field: 'studentName', headerName: 'Học sinh', flex: 1, minWidth: 150 },
     { field: 'score15Min', headerName: 'Điểm 15 phút', width: 150 },
     { field: 'score45Min', headerName: 'Điểm 45 phút', width: 150 },
@@ -236,7 +242,7 @@ const SubScores = () => {
             <Select value={selectedClass} onChange={handleClassChange}>
               {classes.map((cls) => (
                 <MenuItem key={cls._id} value={cls._id}>
-                  {cls.name}
+                  {cls.gradeLevel + cls.name}
                 </MenuItem>
               ))}
             </Select>
@@ -268,7 +274,7 @@ const SubScores = () => {
       {selectedClass && selectedSubject && selectedTerm ? (
         <Box
           m="40px 0 0 0"
-          height="75vh"
+          height={boxHeight}
           sx={{
             '& .MuiDataGrid-root': {
               border: 'none',
@@ -295,8 +301,12 @@ const SubScores = () => {
           <DataGrid
             rows={rows}
             columns={columns}
-            pageSize={5}
             disableSelectionOnClick
+            initialState={{
+              pagination: { paginationModel: { pageSize: 5 } },
+            }}
+            pageSizeOptions={[5, 10, 25]}
+            onPageSizeChange={handlePageSizeChange}
           />
         </Box>
       ) : (

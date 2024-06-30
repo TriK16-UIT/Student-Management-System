@@ -11,7 +11,6 @@ import {
 import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
 import Header from "../../components/Header";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditIcon from "@mui/icons-material/Edit";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import CloseIcon from "@mui/icons-material/Close";
@@ -19,7 +18,6 @@ import DialogAddStudent from "../Dialog/Student/Add_Student";
 import { useAuthContext } from "../../hooks/useAuthContext";
 import { useEffect, useState } from "react";
 import * as XLSX from 'xlsx';
-import { useSignupStudent } from "../../hooks/useSignupStudent";
 import DeleteStudent from "./Delete_Student";
 import { useStudentInfsContext } from "../../hooks/useStudentContext";
 import DialogUpdateStudent from "../Dialog/Student/Edit_Student";
@@ -29,11 +27,17 @@ const StuAdmission = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const { user } = useAuthContext();
-  const { signup, error, isLoading } = useSignupStudent();
   const [selectedStudentId, setSelectedStudentId] = useState(null); // New state for selected student ID
 
   const [dialogState, setDialogState] = useState(null);
   const [open, setOpen] = useState(false);
+  
+  const [boxHeight, setBoxHeight] = useState(400); 
+
+  const handlePageSizeChange = (newPageSize) => {
+      setBoxHeight(newPageSize * 52 + 110); // Adjust the height based on the new page size
+    };
+
 
   const handleOpen = (state, id = null)=> {
     setDialogState(state);
@@ -272,7 +276,7 @@ const StuAdmission = () => {
 
       <Box
         m="40px 0 0 0"
-        height="75vh"
+        height={boxHeight}
         sx={{
           "& .MuiDataGrid-root": {
             border: "none",
@@ -296,7 +300,12 @@ const StuAdmission = () => {
           },
         }}
       >
-        <DataGrid rows={rows} columns={columns} rowsPerPageOptions={[5, 10, 20]} />
+        <DataGrid rows={rows} columns={columns}  initialState={{
+            pagination: { paginationModel: { pageSize: 5 } },
+          }}
+          pageSizeOptions={[5, 10, 25]}
+          onPageSizeChange={handlePageSizeChange}
+        />
       </Box>
     </Box>
   );

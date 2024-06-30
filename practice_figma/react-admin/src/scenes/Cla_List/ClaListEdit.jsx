@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Box, Button, Dialog, DialogContent, DialogTitle, IconButton, Stack, TextField, useTheme } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
+import { Box, Button, Dialog, DialogContent, DialogTitle, IconButton, Stack, TextField, useMediaQuery, useTheme } from "@mui/material";
+import { DataGrid, gridColumnsTotalWidthSelector } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
 import { useParams } from "react-router-dom";
 import Header from "../../components/Header";
@@ -8,6 +8,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useAuthContext } from "../../context/AuthContext";
 import DeleteStudentID from "./Delete_Student_wClass";
 import { useClassMemberContext } from "../../context/ClassMemberContext";
+import { Formik } from "formik";
+import * as yup from "yup";
 
 const ClaListEdit = () => {
   const theme = useTheme();
@@ -21,9 +23,18 @@ const ClaListEdit = () => {
   const { user } = useAuthContext();
   const { classMembers, dispatch } = useClassMemberContext();
 
-  const [addingToClass, setAddingToClass] = useState(false);
   const [addToClassError, setAddToClassError] = useState(null);
   const [classMax,setClassMax] = useState([]);
+
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [boxHeight, setBoxHeight] = useState(400); 
+
+  const handlePageSizeChange = (newPageSize) => {
+      setBoxHeight(newPageSize * 52 + 110); // Adjust the height based on the new page size
+    };
+
 
   useEffect(() => {
     const fetchClassData = async () => {
@@ -40,7 +51,6 @@ const ClaListEdit = () => {
         }
         const data = await response.json();
         setClassData(data);
-        console.log("numba of ", classData)
       } catch (error) {
         console.error("Error fetching class data:", error);
       }
@@ -109,7 +119,6 @@ const ClaListEdit = () => {
     }
   };
 
-
   useEffect(() => {
     fetchStudentsWithoutClass();
   }, [user]);
@@ -130,7 +139,6 @@ const ClaListEdit = () => {
       return;
     }
   
-    console.log(arrIds); // Use the new selection model
     const selectedStudents = studentsWithoutClass.filter(student => arrIds.includes(student._id));
   
     const promises = selectedStudents.map(async (student) => {
@@ -154,7 +162,6 @@ const ClaListEdit = () => {
   
     try {
       const results = await Promise.all(promises);
-      console.log("Updated students:", results);
   
       dispatch({ type: "ADD_CLASS_MEMBERS", payload: results });
       fetchStudentsWithoutClass();
@@ -162,7 +169,6 @@ const ClaListEdit = () => {
       setAddToClassError(null); // Clear any previous errors
     } catch (error) {
       console.error("Error adding students to class:", error);
-      // Handle error, display error message, etc.
     }
   };
 
@@ -255,6 +261,47 @@ const ClaListEdit = () => {
     email: student.email,
   })) : [];
 
+  const handleFormSubmit = async (values) => {
+    console.log(values)
+    try {
+      const response = await fetch(`http://localhost:4000/api/class/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${user.token}`,
+        },
+        body: JSON.stringify(values),
+      });
+
+      const json = await response.json();
+
+      if (!response.ok) {
+        setIsLoading(false);
+        setError(json.error);
+        console.log(json.error)
+      } else {
+        setIsLoading(false);
+        setError("");
+      }
+    } catch (error) {
+      console.error("Error updating class information:", error);
+    }
+  };
+  const initialValues = classData
+    ? {
+        name: classData.name,
+        gradeLevel: classData.gradeLevel,
+      }
+    : {
+      name: "",
+      gradeLevel: "",
+      };
+
+  const checkoutSchema = yup.object().shape({
+    name: yup.string().required("Vui lòng nhập"),
+    gradeLevel: yup.string().required("Vui lòng nhập"),
+  });
+
   return (
     <Box m="20px">
       <Dialog
@@ -286,7 +333,6 @@ const ClaListEdit = () => {
               disableRowSelectionOnClick
               onRowSelectionModelChange={(data) => {
                 setArrIds(data);
-                console.log(data); // Log the new selection model
               }}
             />
             <Button
@@ -306,35 +352,61 @@ const ClaListEdit = () => {
 
       <Header title="Danh sách lớp" />
 
-      <Box display="flex" justifyContent="space-between" mb="20px">
-        <Box display="flex" gap="10px">
-          <TextField
-            fullWidth
-            label="Tên lớp"
-            value={classData.name || ""}
-            InputProps={{
-              readOnly: true,
-              sx: {
-                "&:hover": {
-                  cursor: "default",
-                },
-              },
-            }}
-          />
-          <TextField
-            fullWidth
-            label="Khối"
-            value={classData.gradeLevel || ""}
-            InputProps={{
-              readOnly: true,
-              sx: {
-                "&:hover": {
-                  cursor: "default",
-                },
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb="20px">
+      <Formik
+        onSubmit={handleFormSubmit}
+        initialValues={initialValues}
+        enableReinitialize={true}
+        validationSchema={checkoutSchema}
+      >
+        {({
+          values,
+          errors,
+          touched,
+          handleBlur,
+          handleChange,
+          handleSubmit,
+        }) => (
+          <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+            <TextField
+              fullWidth
+              variant="filled"
+              type="text"
+              label="Tên lớp"
+              onBlur={handleBlur}
+              onChange={handleChange}
+              value={values.name}
+              name="name"
+              error={!!touched.name && !!errors.name}
+              helperText={touched.name && errors.name}
+              InputLabelProps={{
+                shrink: true,
               }}
-            }
-          />
-        </Box>
+              sx={{ flex: 1 }}
+            />
+            <TextField
+              fullWidth
+              variant="filled"
+              type="number"
+              label="Khối"
+              onBlur={handleBlur}
+              onChange={handleChange}
+              value={values.gradeLevel}
+              name="gradeLevel"
+              error={!!touched.gradeLevel && !!errors.gradeLevel}
+              helperText={touched.gradeLevel && errors.gradeLevel}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              sx={{ flex: 1 }}
+            />
+            <Button type="submit" color="secondary" variant="contained"  disabled={isLoading}>
+              Chỉnh sửa tên lớp và khối
+            </Button>
+            {error && <div>{error}</div>}
+          </form>
+        )}
+      </Formik>
         <Button
           variant="contained"
           color="secondary"
@@ -346,7 +418,7 @@ const ClaListEdit = () => {
 
       <Box
         m="40px 0 0 0"
-        height="75vh"
+        height={boxHeight}
         sx={{
           "& .MuiDataGrid-root": {
             border: "none",
@@ -377,6 +449,11 @@ const ClaListEdit = () => {
           rows={rowsstudentsByClass}
           columns={columns}
           getRowId={(row) => row._id}
+          initialState={{
+            pagination: { paginationModel: { pageSize: 5 } },
+          }}
+          pageSizeOptions={[5, 10, 25]}
+          onPageSizeChange={handlePageSizeChange}
         />
       </Box>
     </Box>

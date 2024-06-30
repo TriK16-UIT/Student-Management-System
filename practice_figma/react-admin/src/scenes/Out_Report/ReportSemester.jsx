@@ -16,6 +16,12 @@ const ReportSemester = () => {
   const [termData, setTermData] = useState([]);
   const [selectedTerm, setSelectedTerm] = useState("");
 
+  const [boxHeight, setBoxHeight] = useState(400); 
+
+const handlePageSizeChange = (newPageSize) => {
+    setBoxHeight(newPageSize * 52 + 110); // Adjust the height based on the new page size
+  };
+
   useEffect(() => {
     if (selectedTerm) {
       const fetchClassData = async () => {
@@ -98,9 +104,9 @@ const ReportSemester = () => {
         </Grid>
       </Grid>
       </Box>
-      <Box
+     <Box
         m="40px 0 0 0"
-        height="75vh"
+        height={boxHeight}
         sx={{
           '& .MuiDataGrid-root': {
             border: 'none',
@@ -124,8 +130,12 @@ const ReportSemester = () => {
         <DataGrid
           rows={rows}
           columns={columns}
-          pageSize={5}
           disableSelectionOnClick
+          initialState={{
+            pagination: { paginationModel: { pageSize: 5 } },
+          }}
+          pageSizeOptions={[5, 10, 25]}
+          onPageSizeChange={handlePageSizeChange}
         />
       </Box>
     </Box>

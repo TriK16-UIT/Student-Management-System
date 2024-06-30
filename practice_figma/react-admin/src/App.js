@@ -18,6 +18,7 @@ import UserManage from "./scenes/User_Management";
 import { useAuthContext } from "./hooks/useAuthContext";
 import ReportSubject from "./scenes/Out_Report/ReportSubject";
 import SettingPage from "./scenes/Setting";
+import Subjects from "./scenes/Subjects";
 
 function App() {
   const [theme, colorMode] = useMode();
@@ -41,6 +42,7 @@ function App() {
               <Route path="/student_admission" element={user ?<StuAdmission /> : <Navigate to="/login" />} />
               <Route path="/class_list" element={user ? <ClaList /> : <Navigate to="/login" />} />
               <Route path="/class_list/:id" element={user ? <ClaListEdit /> : <Navigate to="/login" />} />
+              <Route path="/subjects" element={user ? <Subjects /> : <Navigate to="/login" />} />
               <Route path="/student_look_up" element={user ? <StuSearch /> : <Navigate to="/login" />} />
               <Route path="/enter_subject_scores" element={user ? <SubScores /> : <Navigate to="/login" />} />
               <Route path="/summary_report" element={user ? <OutReport /> : <Navigate to="/login" />} />

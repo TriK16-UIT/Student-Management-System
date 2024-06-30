@@ -20,11 +20,9 @@ import CloseIcon from "@mui/icons-material/Close";
 import MainDialog from "../Dialog/Main";
 
 import { useUserContext } from "../../hooks/useUserContext";
-import EditIcon from "@mui/icons-material/Edit";
 import DeleteUser from "./Delete_User";
 import EditUser from "../Dialog/User/Edit_User/Edit_User";
 import EditTeacher from "../Dialog/User/Edit_Teacher/Edit_Teacher";
-import Edit from "@mui/icons-material/Edit";
 import { useAuthContext } from "../../context/AuthContext";
 
 const UserManage = () => {
@@ -35,6 +33,12 @@ const UserManage = () => {
   const [dialogState, setDialogState] = useState(null);
   const [open, setOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+
+  const [boxHeight, setBoxHeight] = useState(400); 
+
+  const handlePageSizeChange = (newPageSize) => {
+      setBoxHeight(newPageSize * 52 + 110); // Adjust the height based on the new page size
+    };
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -174,7 +178,7 @@ const UserManage = () => {
 
       <Box
         m="40px 0 0 0"
-        height="75vh"
+        height={boxHeight}
         sx={{
           "& .MuiDataGrid-root": {
             border: "none",
@@ -198,7 +202,13 @@ const UserManage = () => {
           },
         }}
       >
-        <DataGrid rows={RowUsers} columns={columns} rowsPerPageOptions={[5, 10, 20]} />
+        <DataGrid rows={RowUsers} columns={columns}  
+        initialState={{
+            pagination: { paginationModel: { pageSize: 5 } },
+          }}
+          pageSizeOptions={[5, 10, 25]}
+          onPageSizeChange={handlePageSizeChange}
+        />
       </Box>
     </Box>
   );

@@ -34,7 +34,12 @@ const StuSearch = () => {
   const colors = tokens(theme.palette.mode);
   const { user } = useAuthContext();
   const [classData, setClassData] = useState([]);
+  
+  const [boxHeight, setBoxHeight] = useState(400); 
 
+  const handlePageSizeChange = (newPageSize) => {
+      setBoxHeight(newPageSize * 52 + 110); // Adjust the height based on the new page size
+    };
   useEffect(() => {
     const fetchClassData = async () => {
       try {
@@ -110,7 +115,7 @@ const StuSearch = () => {
 
       <Box
         m="40px 0 0 0"
-        height="75vh"
+        height={boxHeight}
         sx={{
           "& .MuiDataGrid-root": {
             border: "none",
@@ -147,6 +152,11 @@ const StuSearch = () => {
               showQuickFilter: true,
             },
           }}
+          initialState={{
+            pagination: { paginationModel: { pageSize: 5 } },
+          }}
+          pageSizeOptions={[5, 10, 25]}
+          onPageSizeChange={handlePageSizeChange}
         />
       </Box>
     </Box>

@@ -123,7 +123,7 @@ const DialogUpdateStudent = ({ studentId }) => {
 
   return (
     <Box m="20px" textAlign="center">
-      <Header title="Chỉnh sửa Hồ sơ" />
+      <Header title="Chỉnh sửa thông tin học sinh" />
       
       <Formik
         onSubmit={handleFormSubmit}
@@ -153,7 +153,7 @@ const DialogUpdateStudent = ({ studentId }) => {
                 fullWidth
                 variant="filled"
                 type="text"
-                label="Họ và tên"
+                label="Họ"
                 onBlur={handleBlur}
                 onChange={(e) => {
                   handleChange(e);
