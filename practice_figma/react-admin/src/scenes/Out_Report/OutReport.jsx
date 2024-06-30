@@ -44,7 +44,7 @@ const OutReport = () => {
                   <CardMedia
                     component="img"
                     height="200"
-                    image="../../assets/5292b36d28463a68e5a54962f01adb47.jpg"
+                    image="../../assets/Tổng kết học kỳ@2x.png"
                     alt="green iguana"
                   />
                   <CardContent>
@@ -68,7 +68,7 @@ const OutReport = () => {
                   <CardMedia
                     component="img"
                     height="200"
-                    image="../../assets/stelle-honkai-star-rail.png"
+                    image="../../assets/Tổng kết môn học@2x.png"
                     alt="green iguana"
                   />
                   <CardContent>

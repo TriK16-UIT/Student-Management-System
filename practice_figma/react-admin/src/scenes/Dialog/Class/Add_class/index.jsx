@@ -30,6 +30,7 @@ const DialogAddClass = () => {
           handleBlur,
           handleChange,
           handleSubmit,
+          setFieldValue,
         }) => (
           <form onSubmit={handleSubmit}>
             <Box

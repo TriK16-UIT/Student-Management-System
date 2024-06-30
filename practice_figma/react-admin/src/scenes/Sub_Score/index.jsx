@@ -158,7 +158,7 @@ const SubScores = () => {
   };
 
   const columns = [
-    { field: 'id', headerName: 'ID', width: 90 },
+    { field: 'id', headerName: 'STT', width: 90 },
     { field: 'studentName', headerName: 'Học sinh', flex: 1, minWidth: 150 },
     { field: 'score15Min', headerName: 'Điểm 15 phút', width: 150 },
     { field: 'score45Min', headerName: 'Điểm 45 phút', width: 150 },
@@ -236,7 +236,7 @@ const SubScores = () => {
             <Select value={selectedClass} onChange={handleClassChange}>
               {classes.map((cls) => (
                 <MenuItem key={cls._id} value={cls._id}>
-                  {cls.name}
+                  {cls.gradeLevel + cls.name}
                 </MenuItem>
               ))}
             </Select>
