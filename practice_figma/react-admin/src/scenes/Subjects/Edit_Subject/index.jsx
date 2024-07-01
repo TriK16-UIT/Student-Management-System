@@ -21,6 +21,31 @@ const DialogUpdateSubject = ({ subjectId }) => {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const formatSubjectName = (name) => {
+    switch (name.toLowerCase()) {
+      case "math":
+        return "Toán";
+      case "physics":
+        return "Vật lý";
+      case "chemistry":
+        return "Hóa học";
+      case "biology":
+        return "Sinh học";
+      case "history":
+        return "Lịch sử";
+      case "geography":
+        return "Địa lý";
+      case "literature":
+        return "Ngữ văn";
+      case "ethics":
+        return "Giáo dục công dân";
+      case "pe":
+        return "Thể dục";
+      default:
+        return name;
+    }
+  };
+  
   useEffect(() => {
     const fetchSubjectInf = async () => {
         const response = await fetch(`http://localhost:4000/api/subject/${subjectId}`, {
@@ -62,7 +87,7 @@ const DialogUpdateSubject = ({ subjectId }) => {
   
   const initialValues = subjectData
     ? {
-        name: subjectData.name,
+        name: formatSubjectName (subjectData.name),
       }
     : {
         name: "",

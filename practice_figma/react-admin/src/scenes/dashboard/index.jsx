@@ -98,12 +98,10 @@ const Dashboard = () => {
           const [data1, data2] = await Promise.all([fetchTermData("I"), fetchTermData("II")]);
 
           const totalPassingStudents1 = data1.reduce((sum, obj) => sum + (obj.passingStudents || 0), 0);
-          const averagePassingStudents1 = totalPassingStudents1 / data1.length;
           const totalPassRate1 = data1.reduce((sum, obj) => sum + (parseFloat(obj.passRate) || 0), 0);
           const averagePassRate1 = totalPassRate1 / data1.length;
           
           const totalPassingStudents2 = data2.reduce((sum, obj) => sum + (obj.passingStudents || 0), 0);
-          const averagePassingStudents2 = totalPassingStudents2 / data2.length;
           const totalPassRate2 = data2.reduce((sum, obj) => sum + (parseFloat(obj.passRate) || 0), 0);
           const averagePassRate2 = totalPassRate2 / data2.length;
 
@@ -219,7 +217,7 @@ const Dashboard = () => {
             alignItems="center"
             mt="25px"
           >
-            <ProgressCircle size="125" progress={formatScore(termData1.passRate)}  increase={`${formatScore(termData1.passRate)}%`}/>
+            <ProgressCircle size="125" progress={formatScore(termData1.passRate)}  increase={`${formatScore(termData1.passRate)*100}%`}/>
             <Typography
               variant="h5"
               color={colors.purpleAccent[500]}
@@ -245,7 +243,7 @@ const Dashboard = () => {
             alignItems="center"
             mt="25px"
           >
-            <ProgressCircle size="125" progress={formatScore(termData2.passRate)} increase={`${formatScore(termData2.passRate)}%`}/>
+            <ProgressCircle size="125" progress={formatScore(termData2.passRate)} increase={`${formatScore(termData2.passRate)*100}%`}/>
             <Typography
               variant="h5"
               color={colors.purpleAccent[500]}

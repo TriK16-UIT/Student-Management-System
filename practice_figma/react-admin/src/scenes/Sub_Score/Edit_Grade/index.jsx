@@ -18,6 +18,9 @@ const PatchGrade = ({ studentId }) => {
   const [loading, setLoading] = useState(true);
   const { dispatch } = useGradesContext();
 
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
     if (studentId === null) return;
     dispatch({ type: "START_EDITING", payload: studentId });
@@ -57,10 +60,14 @@ const PatchGrade = ({ studentId }) => {
       },
       body: JSON.stringify(values),
     });
+    const json = await response.json();
     if (response.ok) {
-      const updatedGrade = await response.json();
-      dispatch({ type: "UPDATE_GRADE", payload: updatedGrade });
+      setIsLoading(false);
+      setError("Chỉnh sửa thành công");
+      dispatch({ type: "UPDATE_GRADE", payload: json });
     } else {
+      setIsLoading(false);
+      setError(json.error);
       const errorData = await response.json();
       console.error("Failed to update grade information", errorData);
     }
@@ -158,10 +165,11 @@ const PatchGrade = ({ studentId }) => {
             />
             </Box>
             <Box display="flex" justifyContent="end" mt="20px">
-              <Button type="submit" color="secondary" variant="contained">
+              <Button type="submit" color="secondary" variant="contained" disable={isLoading}>
                 Hoàn tất
               </Button>
             </Box>
+            {error && <div>{error}</div>}
           </form>
         )}
       </Formik>
